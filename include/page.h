@@ -5,6 +5,7 @@ typedef enum Pages
 {
   MAIN,
   SETTINGS,
+  ERROR,
   COUNT_PAGES
 } Pages;
 

@@ -8,6 +8,7 @@
 #define DEBUG_COMMAND
 
 // #define SHOW_START_WINDOW
-// #define ENABLE_VALIDATE
+#define ENABLE_VALIDATE
 #define DEBUG
+
 // #define ENABLE_LED_DEBUG

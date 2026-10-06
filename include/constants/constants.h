@@ -22,5 +22,4 @@
 
 #define START_MENU_DURATION 1000 * 2
 
-
 #define DEBOUNCE_DURATION 50

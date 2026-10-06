@@ -3,6 +3,7 @@
 #include "macro/debugUi.h"
 #include "settings.h"
 #include <Arduino.h>
+#include <string.h>
 extern int minPermOffset;
 extern int maxPermOffset;
 extern int hyst;
@@ -46,33 +47,6 @@ help ()
   Serial.println (F ("min=<int>         - set min permitted offset"));
   Serial.println (F ("<other>=<int>     - not a command; try 'help'"));
 }
-
-void
-readCommandAndImpl (char *cmd, Sensors *sensors)
-{
-  size_t cmd_size = sizeof (cmd);
-  if (cmd_size == 0)
-    return;
-#ifdef DEBUG_COMMAND
-  PRINT_DEBUG ("Read command: ", cmd);
-#endif
-  if (strcmp (cmd, "help") == 0)
-    {
-      help ();
-    }
-  else if (tryParse (cmd))
-    {
-#ifdef DEBUG_COMMAND
-      PRINT_DEBUG ("parsed first=", _firstSlice);
-      PRINT_DEBUG ("parsed second=", _secondSlice);
-#endif
-      runCmd (cmd, sensors);
-      return;
-    }
-  else
-    Serial.println ("Command not found");
-}
-
 int
 tryParse (char *cmd)
 {
@@ -88,10 +62,10 @@ tryParse (char *cmd)
 
   return 1;
 }
-
 void
 runCmd (char *cmd, Sensors *sensors)
 {
+
 #ifdef DEBUG_COMMAND
   PRINT_DEBUG ("Before cmd=", cmd);
   PRINT_DEBUG ("First=", _firstSlice);
@@ -167,4 +141,29 @@ runCmd (char *cmd, Sensors *sensors)
 #endif
 
   deallocate (cmd);
+}
+void
+readCommandAndImpl (char *cmd, Sensors *sensors)
+{
+
+  if (strlen (cmd) == 0)
+    return;
+#ifdef DEBUG_COMMAND
+  PRINT_DEBUG ("Read command: ", cmd);
+#endif
+  if (strcmp (cmd, "help") == 0)
+    {
+      help ();
+    }
+  else if (tryParse (cmd))
+    {
+#ifdef DEBUG_COMMAND
+      PRINT_DEBUG ("parsed first=", _firstSlice);
+      PRINT_DEBUG ("parsed second=", _secondSlice);
+#endif
+      runCmd (cmd, sensors);
+      return;
+    }
+  else
+    Serial.println ("Command not found");
 }

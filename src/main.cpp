@@ -11,11 +11,24 @@
 #ifdef ENABLE_COMMANDS
 #include "command.h"
 void handleCommand ();
-
 #endif
-extern int isValueOpen; //  ui.h
-extern int _selected;   // ui.h
-extern int currentPage; // page.h
+#ifdef ENABLE_VALIDATE
+#include "validate.h"
+void haltSystem ();
+int systemHalted = 0;
+#endif
+
+// ui.h
+extern int isValueOpen;
+extern int _selected;
+
+// page.h
+extern int currentPage;
+
+// validate
+extern int errorCode;
+extern int burnerStatus;
+
 OLED_CLASS u8g2 (U8G2_R0);
 
 Sensor s_main;
@@ -34,7 +47,7 @@ void btnPlusLongPress ();
 void btnMinusOneClick ();
 void btnMinusLongPress ();
 void btnMenuOnClick ();
-void btnMenuLongPress ();
+// void btnMenuLongPress ();
 
 void ui ();
 void sensorSetup ();
@@ -72,7 +85,13 @@ loop ()
   handleCommand ();
 #endif
   ui ();
-  
+
+#ifdef ENABLE_VALIDATE
+  // validate
+  validatePipeline (&sensors);
+  if (errorCode > 0)
+    haltSystem ();
+#endif
 }
 
 void
@@ -106,7 +125,7 @@ btnSetup ()
   btn_minus.setDebounceMs (debounce);
 
   btn_menu.attachClick (btnMenuOnClick);
-  btn_menu.attachLongPressStart (btnMenuLongPress);
+  // btn_menu.attachLongPressStart (btnMenuLongPress);
   btn_plus.attachClick (btnPlusOneClick);
   btn_plus.attachLongPressStart (btnPlusLongPress);
   btn_minus.attachClick (btnMinusOneClick);
@@ -124,7 +143,7 @@ ledSetup ()
 }
 
 void
-btnMenuOneClick ()
+btnMenuOnClick ()
 {
   currentPage = currentPage == MAIN ? SETTINGS : MAIN;
 }
@@ -205,7 +224,26 @@ ui ()
         case SETTINGS:
           menuPage (&u8g2, &sensors);
           break;
+        case ERROR:
+          errorPage (&u8g2, errorCode);
+          break;
         }
     }
   while (u8g2.nextPage ());
 }
+
+#ifdef ENABLE_VALIDATE
+void
+haltSystem ()
+{
+  if (!systemHalted)
+    {
+      Serial.println ("ERROR");
+      digitalWrite (BURNER_PIN, LOW);
+      digitalWrite (ERROR_PIN, HIGH);
+      burnerStatus = 0;
+    }
+  systemHalted = 1;
+  currentPage = ERROR;
+}
+#endif

@@ -1,0 +1,70 @@
+#include "validate.h"
+#include "helper.h"
+#include "sensor.h"
+#include "settings.h"
+#define PERMITTED_TEMP_DIFFERENCE 5
+extern int maxPermOffset;
+extern int minPermOffset;
+
+int
+checkSensors (Sensors *sn)
+{
+  /*
+  codes:
+  100 - all sensors agree
+  101 - main sensor is defective
+  102 - first reserve sensor is defective
+  103 - second reserve sensor is defective
+
+  */
+  if (sn->_s_first->temp + PERMITTED_TEMP_DIFFERENCE <= sn->_s_main->temp
+      || sn->_s_second->temp + PERMITTED_TEMP_DIFFERENCE <= sn->_s_main->temp)
+    {
+      return 101;
+    }
+  if (sn->_s_main->temp + PERMITTED_TEMP_DIFFERENCE <= sn->_s_first->temp
+      || sn->_s_second->temp + PERMITTED_TEMP_DIFFERENCE <= sn->_s_first->temp)
+    {
+      return 102;
+    }
+  if (sn->_s_main->temp + PERMITTED_TEMP_DIFFERENCE <= sn->_s_second->temp
+      || sn->_s_first->temp + PERMITTED_TEMP_DIFFERENCE <= sn->_s_second->temp)
+    {
+      return 103;
+    }
+
+  return 0; // no error
+}
+
+int
+checkTemperature (Sensors *sn)
+{
+  // street sensor excluded on purpose, see checkSensors()
+  float temp[]
+      = { sn->_s_main->temp, sn->_s_first->temp, sn->_s_second->temp };
+  float avarageVal
+      = FloatGetAverageValue (temp, sizeof (temp) / sizeof (temp[0]));
+
+  // the bounds themselves are valid readings, so compare strictly
+  if (maxPermOffset < avarageVal)
+    {
+      return 201; // average too hot
+    }
+  if (minPermOffset > avarageVal)
+    {
+      return 202; // average too cold
+    }
+
+  return 0; // no error
+}
+void
+validatePipeline (Sensors *sn)
+{
+  int sensor_code = checkSensors (sn);
+  int temperature_code = checkTemperature (sn);
+
+  if (sensor_code > 0)
+    errorCode = sensor_code;
+  else if (temperature_code)
+    errorCode = temperature_code;
+}
