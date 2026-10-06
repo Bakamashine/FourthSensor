@@ -17,6 +17,14 @@ typedef struct Sensor
   float _adcFilter;
 } Sensor;
 
+typedef struct Sensors
+{
+  Sensor *_s_main;
+  Sensor *_s_first;
+  Sensor *_s_second;
+  Sensor *_s_street;
+} Sensors;
+
 float getTemp (Sensor *);
 void constrSensor (Sensor *, uint8_t pin);
 

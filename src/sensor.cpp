@@ -37,25 +37,26 @@ ntcResAt (size_t i)
 float
 getTemp (Sensor *sensor)
 {
-  uint32_t now = millis ();
-  if (now - sensor->lastTemp < TEMP_INTERVAL)
-    return sensor->lastTemp + (float)(sensor->correctInt);
+  // if (now == 0)
+  // now = millis ();
+  // if (now - sensor->lastSampleMs < TEMP_INTERVAL)
+  // if (return_last)
+  // return sensor->lastTemp + (float)(sensor->correctInt);
 
-  sensor->lastSampleMs = now;
+  // sensor->lastSampleMs = now;
 
   int rawAdc = sensor->acp;
   if (sensor->_adcFilter < 0.0F)
     sensor->_adcFilter = (float)(rawAdc);
   else
     // EMA: alpha * new + (1 - alpha) * old
-    sensor->_adcFilter = FILTER_ALPHA * rawAdc + (1.0F - FILTER_ALPHA) * sensor->_adcFilter;
+    sensor->_adcFilter
+        = FILTER_ALPHA * rawAdc + (1.0F - FILTER_ALPHA) * sensor->_adcFilter;
 
   // round to the nearest whole ADC count before the table lookup: the filter
   // output is fractional, and the table is indexed by an integer count
-  sensor->_adcFilter += 0.5F;
   sensor->samples[sensor->sampleIdx]
-      // = getTempFromTable ((int)(sensor->_adcFilter + 0.5F));
-      = getTempFromTable(sensor);
+      = getTempFromTable (sensor);
   sensor->sampleIdx++;
 
   if (sensor->sampleIdx >= ATTEMPTS)
@@ -106,6 +107,11 @@ getTempFromTable (Sensor *sensor)
 void
 constrSensor (Sensor *sensor, uint8_t pin)
 {
-  sensor->acp = analogRead (pin);
-  sensor->temp = getTemp (sensor);
+  sensor->lastSampleMs = millis ();
+  uint32_t now = millis ();
+  if (now - sensor->lastSampleMs < TEMP_INTERVAL)
+    {
+      sensor->acp = analogRead (pin);
+      sensor->temp = getTemp (sensor);
+    }
 }

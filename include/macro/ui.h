@@ -1,9 +1,9 @@
 #pragma once
 #include "constants/ui.h"
 #define _CENTER_X(display, text)                                              \
-  ((OLED_WIDTH - (display).getStrWidth (text)) / 2)
+  ((OLED_WIDTH - display->getStrWidth (text)) / 2)
 #define _CENTER_Y(display)                                                    \
-  ((OLED_HEIGHT + (display).getFontHeight ()) / 2 - 25)
+  ((OLED_HEIGHT + display->getFontAscent ()) / 2 - 25)
 
 #define RAW_WRITE_ROW(row, text, v1, v2, p_cls)                               \
   do                                                                          \

@@ -4,7 +4,7 @@
 typedef enum Pages
 {
   MAIN,
-  SETTING,
+  SETTINGS,
   COUNT_PAGES
 } Pages;
 
