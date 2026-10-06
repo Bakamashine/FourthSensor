@@ -36,6 +36,7 @@ void btnMinusLongPress ();
 void btnMenuOnClick ();
 void btnMenuLongPress ();
 
+void ui ();
 void sensorSetup ();
 void ledSetup ();
 
@@ -70,21 +71,8 @@ loop ()
 #ifdef ENABLE_COMMANDS
   handleCommand ();
 #endif
-  u8g2.firstPage ();
-  do
-    {
-      u8g2.setFont (u8g2_font_ncenB08_tr);
-      switch (currentPage)
-        {
-        case MAIN:
-          mainPage (&u8g2, &sensors);
-          break;
-        case SETTINGS:
-          menuPage (&u8g2, &sensors);
-          break;
-        }
-    }
-  while (u8g2.nextPage ());
+  ui ();
+  
 }
 
 void
@@ -201,3 +189,23 @@ handleCommand ()
 }
 
 #endif
+
+void
+ui ()
+{
+  u8g2.firstPage ();
+  do
+    {
+      u8g2.setFont (u8g2_font_ncenB08_tr);
+      switch (currentPage)
+        {
+        case MAIN:
+          mainPage (&u8g2, &sensors);
+          break;
+        case SETTINGS:
+          menuPage (&u8g2, &sensors);
+          break;
+        }
+    }
+  while (u8g2.nextPage ());
+}
