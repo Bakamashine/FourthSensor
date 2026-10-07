@@ -39,11 +39,6 @@ checkSensors (Sensors *sn)
 int
 checkTemperature (Sensors *sn)
 {
-  // street sensor excluded on purpose, see checkSensors()
-  // float temp[]
-  //     = { sn->_s_main->temp, sn->_s_first->temp, sn->_s_second->temp };
-  // float averageVal
-  //     = FloatGetAverageValue (temp, sizeof (temp) / sizeof (temp[0]));
 
   float averageVal = getFAverageTemp(sn);
 

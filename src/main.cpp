@@ -21,7 +21,7 @@ int systemHalted = 0;
 #endif
 
 // page.h
-int currentPage = SETTINGS;
+int currentPage = MAIN;
 
 OLED_CLASS u8g2 (U8G2_R0);
 
