@@ -5,7 +5,9 @@
 #include "macro/debugUi.h"
 #include "page.h"
 #include "sensor.h"
-#include "ui.h"
+#include "settings.h"
+#include "ui/main_ui.h"
+#include "ui/menu.h"
 #include <Arduino.h>
 #include <U8g2lib.h>
 #ifdef ENABLE_COMMANDS
@@ -19,7 +21,7 @@ int systemHalted = 0;
 #endif
 
 // ui.h
-extern int isValueOpen;
+extern bool isValueOpen;
 extern int _selected;
 
 // page.h
@@ -27,7 +29,9 @@ extern int currentPage;
 
 // validate
 extern int errorCode;
-extern int burnerStatus;
+
+// settings
+extern bool burnerStatus;
 
 OLED_CLASS u8g2 (U8G2_R0);
 
@@ -47,7 +51,8 @@ void btnPlusLongPress ();
 void btnMinusOneClick ();
 void btnMinusLongPress ();
 void btnMenuOnClick ();
-// void btnMenuLongPress ();
+void btnMenuLongPress ();
+void btnTick ();
 
 void ui ();
 void sensorSetup ();
@@ -67,6 +72,7 @@ setup ()
 void
 loop ()
 {
+  btnTick ();
   constrSensor (&s_main, MAIN_SENSOR_PIN);
   constrSensor (&s_first, FIRST_RESERVE_SENSOR_PIN);
   constrSensor (&s_second, SECOND_RESERVE_SENSOR_PIN);
@@ -80,6 +86,13 @@ loop ()
   PRINT_DEBUG ("s_second temp: ", s_second.temp);
   PRINT_DEBUG ("s_street acp: ", s_street.acp);
   PRINT_DEBUG ("s_street temp: ", s_street.temp);
+
+  PRINT_DEBUG ("burnerStatus: ", burnerStatus);
+  PRINT_DEBUG ("isValueOpen: ", isValueOpen);
+  PRINT_DEBUG ("currentPage: ", currentPage);
+  PRINT_DEBUG ("errorCode: ", errorCode);
+  PRINT_DEBUG ("_selected: ", _selected);
+
 #endif
 #ifdef ENABLE_COMMANDS
   handleCommand ();
@@ -124,8 +137,8 @@ btnSetup ()
   btn_plus.setDebounceMs (debounce);
   btn_minus.setDebounceMs (debounce);
 
-  btn_menu.attachClick (btnMenuOnClick);
-  // btn_menu.attachLongPressStart (btnMenuLongPress);
+  // btn_menu.attachClick (btnMenuOnClick);
+  btn_menu.attachLongPressStart (btnMenuLongPress);
   btn_plus.attachClick (btnPlusOneClick);
   btn_plus.attachLongPressStart (btnPlusLongPress);
   btn_minus.attachClick (btnMinusOneClick);
@@ -146,6 +159,19 @@ void
 btnMenuOnClick ()
 {
   currentPage = currentPage == MAIN ? SETTINGS : MAIN;
+}
+
+void
+btnMenuLongPress ()
+{
+  btnMenuOnClick ();
+}
+void
+btnTick ()
+{
+  btn_menu.tick ();
+  btn_plus.tick ();
+  btn_minus.tick ();
 }
 void
 btnPlusLongPress ()
