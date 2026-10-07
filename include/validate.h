@@ -4,5 +4,5 @@
 
 static int errorCode = 0;
 
-void validatePipeline(Sensors *);
+void validatePipeline (Sensors *);
 #endif

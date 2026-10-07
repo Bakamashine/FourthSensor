@@ -55,8 +55,7 @@ getTemp (Sensor *sensor)
 
   // round to the nearest whole ADC count before the table lookup: the filter
   // output is fractional, and the table is indexed by an integer count
-  sensor->samples[sensor->sampleIdx]
-      = getTempFromTable (sensor);
+  sensor->samples[sensor->sampleIdx] = getTempFromTable (sensor);
   sensor->sampleIdx++;
 
   if (sensor->sampleIdx >= ATTEMPTS)

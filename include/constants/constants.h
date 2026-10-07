@@ -1,6 +1,5 @@
 #pragma once
 
-
 #define VERSION "V: 0.1"
 
 #define BOD 9600
