@@ -40,7 +40,7 @@ int
 checkTemperature (Sensors *sn)
 {
 
-  float averageVal = getFAverageTemp(sn);
+  float averageVal = getFAverageTemp (sn);
 
   // the bounds themselves are valid readings, so compare strictly
   if (maxPermOffset < averageVal)

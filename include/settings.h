@@ -4,8 +4,8 @@
 
 extern int minPermOffset;
 extern int maxPermOffset;
-extern int hyst;
+extern float hyst;
 extern bool burnerStatus;
 extern int uTemp;
 
-bool checkTempForBurner (Sensors*);
+bool checkTempForBurner (Sensors *);

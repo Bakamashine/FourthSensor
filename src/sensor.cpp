@@ -1,6 +1,7 @@
 #include "sensor.h"
 #include "constants/ntcPoint.h"
 #include "helper.h"
+#include "settings.h"
 #include <Arduino.h>
 
 #define MAX_ACP 1023
@@ -44,11 +45,16 @@ getTemp (Sensor *sensor)
   if (sensor->sampleIdx >= ATTEMPTS)
     {
       sort (sensor->samples, ATTEMPTS);
-      sensor->lastTemp
-          = FloatGetAverageValue (&sensor->samples[1], ATTEMPTS - 2);
+      float average = FloatGetAverageValue (&sensor->samples[1], ATTEMPTS - 2);
+
+      if (!sensor->ready || average - sensor->lastTemp > hyst
+          || sensor->lastTemp - average > hyst)
+        sensor->lastTemp = average;
+
       sensor->sampleIdx = 0;
       sensor->ready = true;
     }
+
   return sensor->lastTemp + static_cast<float> (sensor->correctInt);
 }
 
@@ -105,7 +111,9 @@ constrSensor (Sensor *sensor, uint8_t pin)
 int
 getIAverageTemp (Sensors *sn)
 {
-  int temp[] = { sn->_s_main->temp, sn->_s_first->temp, sn->_s_second->temp };
+  int temp[] = { static_cast<int> (sn->_s_main->temp),
+                 static_cast<int> (sn->_s_first->temp),
+                 static_cast<int> (sn->_s_second->temp) };
   float averageVal
       = IntegerGetAverageValue (temp, sizeof (temp) / sizeof (temp[0]));
   return static_cast<int> (averageVal);

@@ -4,7 +4,6 @@
 #include "macro/ui.h"
 #include "sensor.h"
 
-
 void
 mainPage (U8G2 *display, Sensors *sensors)
 {
@@ -34,6 +33,3 @@ mainPage (U8G2 *display, Sensors *sensors)
     N_AT_WRITE_ROW (U8G2_FIFTH_ROW, PREVIEW_STREET, sensors->_s_street->temp,
                     sensors->_s_street->acp, display);
 }
-
-
-
