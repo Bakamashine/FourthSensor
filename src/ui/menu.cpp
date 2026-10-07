@@ -105,7 +105,7 @@ menuPage (U8G2 *display, Sensors *sensors)
     {
       char userTemperature_str[message_size];
       snprintf (userTemperature_str, message_size, "%s %d", PREVIEW_USER_TEMP,
-                userTemperature);
+                uTemp);
       RAW_WRITE_ROW (U8G2_FIFTH_ROW, PREVIEW_T4, ci_street_sensor_str,
                      userTemperature_str, display);
     }

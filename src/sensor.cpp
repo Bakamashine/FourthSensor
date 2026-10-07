@@ -14,12 +14,6 @@
   (RESISTOR_FROM_SENSOR * static_cast<float> (value) / (MAX_ACP - value))
 #define TEMP_INTERVAL (1000) // ms between samples
 
-// uint32_t _lastSampleMs = 0;
-// int _sampleIdx = 0;
-// float _lastTemp = 0;
-// float _samples[ATTEMPTS] = {};
-// int _correctInt = 0;
-
 float getTempFromTable (Sensor *);
 
 int16_t
@@ -37,14 +31,6 @@ ntcResAt (size_t i)
 float
 getTemp (Sensor *sensor)
 {
-  // if (now == 0)
-  // now = millis ();
-  // if (now - sensor->lastSampleMs < TEMP_INTERVAL)
-  // if (return_last)
-  // return sensor->lastTemp + static_cast<float> (sensor->correctInt);
-
-  // sensor->lastSampleMs = now;
-
   int rawAdc = sensor->acp;
   if (sensor->_adcFilter < 0.0F)
     sensor->_adcFilter = static_cast<float> (rawAdc);
@@ -97,9 +83,8 @@ getTempFromTable (Sensor *sensor)
         continue;
 
       // interpolate between the two bracketing table rows
-      float fraction
-          = static_cast<float> (res - sensor->resist)
-            / (res - ntcResAt (i + 1));
+      float fraction = static_cast<float> (res - sensor->resist)
+                       / (res - ntcResAt (i + 1));
       return static_cast<float> (temp)
              + fraction * static_cast<float> (ntcTempAt (i + 1) - temp);
     }
@@ -118,4 +103,23 @@ constrSensor (Sensor *sensor, uint8_t pin)
   sensor->acp = analogRead (pin);
   sensor->temp = getTemp (sensor);
   sensor->lastSampleMs = now;
+}
+
+int
+getIAverageTemp (Sensors *sn)
+{
+  int temp[] = { sn->_s_main->temp, sn->_s_first->temp, sn->_s_second->temp };
+  float averageVal
+      = IntegerGetAverageValue (temp, sizeof (temp) / sizeof (temp[0]));
+  return static_cast<int> (averageVal);
+}
+
+float
+getFAverageTemp (Sensors *sn)
+{
+  float temp[]
+      = { sn->_s_main->temp, sn->_s_first->temp, sn->_s_second->temp };
+  float averageVal
+      = FloatGetAverageValue (temp, sizeof (temp) / sizeof (temp[0]));
+  return averageVal;
 }

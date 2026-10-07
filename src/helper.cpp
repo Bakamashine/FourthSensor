@@ -48,6 +48,17 @@ FloatGetAverageValue (float *arr, size_t size)
   return sum / static_cast<float> (size);
 }
 
+int
+IntegerGetAverageValue (int *arr, size_t size)
+{
+  if (size == 0)
+    return 0;
+  int sum = 0;
+  for (size_t i = 0; i < size; i++)
+    sum += arr[i];
+  return static_cast<int> (sum / static_cast<int> (size));
+}
+
 void
 setIntText (char *buf, size_t size, int v)
 {

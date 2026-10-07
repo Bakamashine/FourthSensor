@@ -44,6 +44,7 @@ void btnMenuOnClick ();
 void btnMenuLongPress ();
 void btnTick ();
 
+void burnerSystem ();
 void ui ();
 void sensorSetup ();
 void ledSetup ();
@@ -123,6 +124,8 @@ loop ()
   if (errorCode > 0)
     haltSystem ();
 #endif
+
+  burnerSystem ();
 }
 
 void
@@ -292,3 +295,16 @@ haltSystem ()
   currentPage = ERROR;
 }
 #endif
+
+void
+burnerSystem ()
+{
+  if (checkTempForBurner (&sensors))
+    {
+      digitalWrite (BURNER_PIN, HIGH);
+    }
+  else
+    {
+      digitalWrite (BURNER_PIN, LOW);
+    }
+}

@@ -40,17 +40,19 @@ int
 checkTemperature (Sensors *sn)
 {
   // street sensor excluded on purpose, see checkSensors()
-  float temp[]
-      = { sn->_s_main->temp, sn->_s_first->temp, sn->_s_second->temp };
-  float avarageVal
-      = FloatGetAverageValue (temp, sizeof (temp) / sizeof (temp[0]));
+  // float temp[]
+  //     = { sn->_s_main->temp, sn->_s_first->temp, sn->_s_second->temp };
+  // float averageVal
+  //     = FloatGetAverageValue (temp, sizeof (temp) / sizeof (temp[0]));
+
+  float averageVal = getFAverageTemp(sn);
 
   // the bounds themselves are valid readings, so compare strictly
-  if (maxPermOffset < avarageVal)
+  if (maxPermOffset < averageVal)
     {
       return 201; // average too hot
     }
-  if (minPermOffset > avarageVal)
+  if (minPermOffset > averageVal)
     {
       return 202; // average too cold
     }

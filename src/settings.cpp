@@ -6,10 +6,15 @@ int minPermOffset = 10;
 int maxPermOffset = 50;
 int hyst = DEFAULT_HYSTERESIS;
 bool burnerStatus = false;
-int userTemperature = 40;
+int uTemp = 40;
 
 bool
-checkBurner (Sensors*)
+checkTempForBurner (Sensors *sn)
 {
-  
+  int averageTemp = getIAverageTemp (sn);
+  if (averageTemp + hyst >= uTemp)
+    return false;
+  if (averageTemp - hyst <= uTemp)
+    return true;
+  return false;
 }

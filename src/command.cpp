@@ -112,9 +112,9 @@ runCmd (char *cmd, Sensors *sensors)
     }
   else if (strcmp (_firstSlice, "ut") == 0)
     {
-      userTemperature = second_slice_value;
+      uTemp = second_slice_value;
 #ifdef DEBUG_COMMAND
-      Serial.println ("RUN userTemperature applied");
+      Serial.println ("RUN uTemp applied");
 #endif
     }
 #ifdef DEBUG_COMMAND
