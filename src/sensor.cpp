@@ -2,9 +2,6 @@
 #include "constants/ntcPoint.h"
 #include "helper.h"
 #include <Arduino.h>
-// correction is an offset in degrees, keep it a sane displayable value
-#define MIN_CORRECT_INT (-50)
-#define MAX_CORRECT_INT 50
 
 #define MAX_ACP 1023
 #define RESISTOR_FROM_SENSOR 2000 // 2kOm

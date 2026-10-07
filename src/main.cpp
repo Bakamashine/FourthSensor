@@ -180,6 +180,7 @@ void
 btnMenuOnClick ()
 {
   currentPage = currentPage == MAIN ? SETTINGS : MAIN;
+  isValueOpen = false;
 }
 
 void
@@ -206,12 +207,12 @@ btnPlusOneClick ()
 {
   if (currentPage == SETTINGS && !isValueOpen)
     {
-      _selected = (_selected - 1 + COUNT_PAGES) % COUNT_PAGES;
+      menuSelectPrev ();
 #ifdef DEBUG
       Serial.println ("goToUp");
 #endif
     }
-  else if (currentPage && isValueOpen)
+  else if (currentPage == SETTINGS && isValueOpen)
     {
       menuPageIncreaseValue ();
     }
@@ -222,7 +223,7 @@ btnMinusOneClick ()
 {
   if (currentPage == SETTINGS && !isValueOpen)
     {
-      _selected = (_selected + 1) % COUNT_PAGES;
+      menuSelectNext ();
 #ifdef DEBUG
       Serial.println ("goToDown");
 #endif

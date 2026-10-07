@@ -32,5 +32,13 @@
 /// menu selection marker column, left of the first table column
 #define U8G2_MENU_MARKER_X 0
 
+/// selection marker for the right half of the menu, just before the third
+/// column so it does not collide with the values of the first half
+#define U8G2_MENU_MARKER2_X (U8G2_THIRD_COLUMN - 8) // 75
+
+/// edit mode indicator, top right corner (next to the page title)
+#define U8G2_EDIT_X (OLED_WIDTH - 20)
+#define U8G2_EDIT_Y U8G2_FIRST_ROW
+
 #define VERSION_X getWidth () - 28
 #define VERSION_Y 10

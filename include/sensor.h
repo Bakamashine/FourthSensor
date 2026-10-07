@@ -2,6 +2,10 @@
 #include "constants/ntcPoint.h"
 #define ATTEMPTS 5
 
+/// correction is an offset in degrees, keep it a sane displayable value
+#define MIN_CORRECT_INT (-50)
+#define MAX_CORRECT_INT 50
+
 /// Structure representing a single NTC temperature sensor.
 /// Measures temperature using a voltage divider with a series resistor.
 struct Sensor

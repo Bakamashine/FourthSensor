@@ -9,51 +9,90 @@
 bool isValueOpen = false;
 int _selected = 0;
 
-#define MENU_ROWS_COUNT 4
-static Records _rows[MENU_ROWS_COUNT];
-void
-drawPoint (U8G2 *display)
+/// bounds for the settings that are not sensor corrections
+#define HYST_MIN 0
+#define HYST_MAX 50
+#define OFFSET_MIN 0
+#define OFFSET_MAX 200
+#define UTEMP_MIN 0
+#define UTEMP_MAX 100
+
+/// left half: the four sensor corrections, right half: the settings
+#define MENU_LEFT_ITEMS 4
+#define MENU_ITEMS_COUNT (MENU_LEFT_ITEMS + 4)
+
+struct MenuItem
 {
-  for (int i = 0; i < MENU_ROWS_COUNT; i++)
+  int row;      ///< y of the row the value is drawn on
+  int markerX;  ///< x of the selection marker for this cell
+  int valueX;   ///< x the value (and, on the right half, the label) is drawn
+  const char *preview;
+  int *value; ///< address of the edited variable
+  int min;    ///< smallest value the variable may take
+  int max;    ///< largest value the variable may take
+};
+
+static MenuItem _items[MENU_ITEMS_COUNT];
+
+static void
+buildItems (Sensors *sensors)
+{
+  // left half, sensor corrections
+  _items[0]
+      = { U8G2_SECOND_ROW, U8G2_MENU_MARKER_X, U8G2_SECOND_COLUMN, PREVIEW_T1,
+          &sensors->_s_main->correctInt, MIN_CORRECT_INT, MAX_CORRECT_INT };
+  _items[1]
+      = { U8G2_THIRD_ROW, U8G2_MENU_MARKER_X, U8G2_SECOND_COLUMN, PREVIEW_T2,
+          &sensors->_s_first->correctInt, MIN_CORRECT_INT, MAX_CORRECT_INT };
+  _items[2]
+      = { U8G2_FOURTH_ROW, U8G2_MENU_MARKER_X, U8G2_SECOND_COLUMN, PREVIEW_T3,
+          &sensors->_s_second->correctInt, MIN_CORRECT_INT, MAX_CORRECT_INT };
+  _items[3]
+      = { U8G2_FIFTH_ROW, U8G2_MENU_MARKER_X, U8G2_SECOND_COLUMN, PREVIEW_T4,
+          &sensors->_s_street->correctInt, MIN_CORRECT_INT, MAX_CORRECT_INT };
+
+  // right half, settings; min/max of the permitted offset are kept ordered
+  _items[4] = { U8G2_SECOND_ROW, U8G2_MENU_MARKER2_X, U8G2_THIRD_COLUMN,
+                PREVIEW_HYST, &hyst, HYST_MIN, HYST_MAX };
+  _items[5] = { U8G2_THIRD_ROW, U8G2_MENU_MARKER2_X, U8G2_THIRD_COLUMN,
+                PREVIEW_MAX, &maxPermOffset, minPermOffset, OFFSET_MAX };
+  _items[6] = { U8G2_FOURTH_ROW, U8G2_MENU_MARKER2_X, U8G2_THIRD_COLUMN,
+                PREVIEW_MIN, &minPermOffset, OFFSET_MIN, maxPermOffset };
+  _items[7] = { U8G2_FIFTH_ROW, U8G2_MENU_MARKER2_X, U8G2_THIRD_COLUMN,
+                PREVIEW_USER_TEMP, &uTemp, UTEMP_MIN, UTEMP_MAX };
+}
+
+static void
+drawItems (U8G2 *display)
+{
+  char valueStr[8];
+  char line[20];
+
+  for (int i = 0; i < MENU_ITEMS_COUNT; i++)
     {
-      display->drawStr (U8G2_MENU_MARKER_X, _rows[i].row,
-                        i == _selected ? ">" : " ");
+      const MenuItem &item = _items[i];
+      if (i < MENU_LEFT_ITEMS)
+        {
+          setIntText (valueStr, sizeof (valueStr), *item.value);
+          display->drawStr (U8G2_FIRST_COLUMN, item.row, item.preview);
+          display->drawStr (item.valueX, item.row, valueStr);
+        }
+      else
+        {
+          // the right half is narrower, label and value share one string
+          snprintf (line, sizeof (line), "%s %d", item.preview, *item.value);
+          display->drawStr (item.valueX, item.row, line);
+        }
     }
 }
 
-void
-drawPreviews (U8G2 *display)
+static void
+drawMarker (U8G2 *display)
 {
-  for (int i = 0; i < MENU_ROWS_COUNT; i++)
-    {
-      if (_rows[i].preview)
-        display->drawStr (_rows[i].col, _rows[i].row, _rows[i].preview);
-    }
-}
-void
-buildRows (Sensors *sensors)
-{
-  // _rows = static_cast<Records *>(malloc (sizeof (Records) * 4));
-
-  _rows[0].sn = sensors->_s_main;
-  _rows[0].row = U8G2_SECOND_ROW;
-  _rows[0].col = U8G2_FIRST_COLUMN;
-  _rows[0].preview = PREVIEW_T1;
-
-  _rows[1].sn = sensors->_s_first;
-  _rows[1].row = U8G2_THIRD_ROW;
-  _rows[1].col = U8G2_FIRST_COLUMN;
-  _rows[1].preview = PREVIEW_T2;
-
-  _rows[2].sn = sensors->_s_second;
-  _rows[2].row = U8G2_FOURTH_ROW;
-  _rows[2].col = U8G2_FIRST_COLUMN;
-  _rows[2].preview = PREVIEW_T3;
-
-  _rows[3].sn = sensors->_s_street;
-  _rows[3].row = U8G2_FIFTH_ROW;
-  _rows[3].col = U8G2_FIRST_COLUMN;
-  _rows[3].preview = PREVIEW_T4;
+  if (_selected < 0 || _selected >= MENU_ITEMS_COUNT)
+    return;
+  const MenuItem &item = _items[_selected];
+  display->drawStr (item.markerX, item.row, ">");
 }
 
 void
@@ -61,64 +100,52 @@ menuPage (U8G2 *display, Sensors *sensors)
 {
   display->drawStr (_CENTER_X (display, PREVIEW_MENU), _CENTER_Y (display),
                     PREVIEW_MENU);
-  buildRows (sensors);
-  drawPreviews (display);
-  drawPoint (display);
-
-  const int size = 8;
-  char ci_main_sensor_str[size];
-  char ci_first_sensor_str[size];
-  char ci_second_sensor_str[size];
-  char ci_street_sensor_str[size];
-  setIntText (ci_main_sensor_str, size, sensors->_s_main->correctInt);
-  setIntText (ci_first_sensor_str, size, sensors->_s_first->correctInt);
-  setIntText (ci_second_sensor_str, size, sensors->_s_second->correctInt);
-  setIntText (ci_street_sensor_str, size, sensors->_s_street->correctInt);
-  RAW_WRITE_ROW (U8G2_SECOND_ROW, PREVIEW_T1, ci_main_sensor_str, nullptr,
-                 display);
-  RAW_WRITE_ROW (U8G2_THIRD_ROW, PREVIEW_T2, ci_first_sensor_str, nullptr,
-                 display);
-  RAW_WRITE_ROW (U8G2_FOURTH_ROW, PREVIEW_T3, ci_second_sensor_str, nullptr,
-                 display);
-
-  const int message_size = 16;
-  char __hyst[message_size];
-  char max_permitted_offset[message_size];
-  char min_permitted_offset[message_size];
-  snprintf (max_permitted_offset, message_size, "%s %d", PREVIEW_MAX,
-            maxPermOffset);
-  snprintf (min_permitted_offset, message_size, "%s %d", PREVIEW_MIN,
-            minPermOffset);
-  snprintf (__hyst, message_size, "%s %d", PREVIEW_HYST, hyst);
-  RAW_WRITE_ROW (U8G2_SECOND_ROW, PREVIEW_T1, nullptr, __hyst, display);
-  RAW_WRITE_ROW (U8G2_THIRD_ROW, PREVIEW_T2, nullptr, max_permitted_offset,
-                 display);
-  RAW_WRITE_ROW (U8G2_FOURTH_ROW, PREVIEW_T3, nullptr, min_permitted_offset,
-                 display);
+  buildItems (sensors);
+  drawItems (display);
+  drawMarker (display);
 
   if (isValueOpen)
-    {
-      RAW_WRITE_ROW (U8G2_FIFTH_ROW, PREVIEW_T4, ci_street_sensor_str, "ON",
-                     display);
-    }
-  else
-    {
-      char userTemperature_str[message_size];
-      snprintf (userTemperature_str, message_size, "%s %d", PREVIEW_USER_TEMP,
-                uTemp);
-      RAW_WRITE_ROW (U8G2_FIFTH_ROW, PREVIEW_T4, ci_street_sensor_str,
-                     userTemperature_str, display);
-    }
+    display->drawStr (U8G2_EDIT_X, U8G2_EDIT_Y, "ON");
+}
+
+static void
+changeSelected (int delta)
+{
+  if (_selected < 0 || _selected >= MENU_ITEMS_COUNT)
+    return;
+
+  int *value = _items[_selected].value;
+  if (value == nullptr)
+    return;
+
+  int next = *value + delta;
+  if (next < _items[_selected].min)
+    next = _items[_selected].min;
+  if (next > _items[_selected].max)
+    next = _items[_selected].max;
+  *value = next;
 }
 
 void
 menuPageIncreaseValue ()
 {
-  _rows[_selected].sn->correctInt++;
+  changeSelected (1);
 }
 
 void
 menuPageDecreaseValue ()
 {
-  _rows[_selected].sn->correctInt--;
+  changeSelected (-1);
+}
+
+void
+menuSelectNext ()
+{
+  _selected = (_selected + 1) % MENU_ITEMS_COUNT;
+}
+
+void
+menuSelectPrev ()
+{
+  _selected = (_selected - 1 + MENU_ITEMS_COUNT) % MENU_ITEMS_COUNT;
 }
