@@ -1,13 +1,11 @@
-#ifndef PAGE_H
-#define PAGE_H
+#pragma once
 
-typedef enum Pages
+enum Pages
 {
   MAIN,
   SETTINGS,
   ERROR,
   COUNT_PAGES
-} Pages;
+};
 
 extern int currentPage;
-#endif

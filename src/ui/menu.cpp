@@ -33,7 +33,7 @@ drawPreviews (U8G2 *display)
 void
 buildRows (Sensors *sensors)
 {
-  // _rows = (Records*)malloc(sizeof(Records)*4);
+  // _rows = static_cast<Records *>(malloc (sizeof (Records) * 4));
 
   _rows[0].sn = sensors->_s_main;
   _rows[0].row = U8G2_SECOND_ROW;

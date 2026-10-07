@@ -28,6 +28,7 @@ help ()
   Serial.println (F ("sens4=<int>       - set street sensor correction"));
   Serial.println (F ("max=<int>         - set max permitted offset"));
   Serial.println (F ("min=<int>         - set min permitted offset"));
+  Serial.println (F ("ut=<int>          - set user temperature"));
   Serial.println (F ("<other>=<int>     - not a command; try 'help'"));
 }
 int
@@ -107,6 +108,13 @@ runCmd (char *cmd, Sensors *sensors)
       minPermOffset = second_slice_value;
 #ifdef DEBUG_COMMAND
       Serial.println ("RUN    min applied");
+#endif
+    }
+  else if (strcmp (_firstSlice, "ut") == 0)
+    {
+      userTemperature = second_slice_value;
+#ifdef DEBUG_COMMAND
+      Serial.println ("RUN userTemperature applied");
 #endif
     }
 #ifdef DEBUG_COMMAND

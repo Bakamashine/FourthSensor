@@ -1,10 +1,11 @@
-#ifndef SETTINGS_CPP
-#define SETTINGS_CPP
+#pragma once
 #include "constants/settings.h"
+#include "sensor.h"
 
 extern int minPermOffset;
 extern int maxPermOffset;
 extern int hyst;
 extern bool burnerStatus;
 extern int userTemperature;
-#endif
+
+bool checkBurner (Sensors*);

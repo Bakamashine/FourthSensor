@@ -2,11 +2,11 @@
 #include "avr/pgmspace.h"
 #include <Arduino.h>
 
-typedef struct
+struct NtcPoint
 {
   int16_t temp_c;
   uint32_t resistance;
-} NtcPoint;
+};
 
 static const NtcPoint ntcTable[] PROGMEM = {
   // temperature | om

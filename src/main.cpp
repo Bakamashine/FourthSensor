@@ -203,8 +203,7 @@ btnPlusOneClick ()
 {
   if (currentPage == SETTINGS && !isValueOpen)
     {
-      // menuUI.goToUp ();
-      _selected++;
+      _selected = (_selected - 1 + COUNT_PAGES) % COUNT_PAGES;
 #ifdef DEBUG
       Serial.println ("goToUp");
 #endif
@@ -220,7 +219,7 @@ btnMinusOneClick ()
 {
   if (currentPage == SETTINGS && !isValueOpen)
     {
-      _selected--;
+      _selected = (_selected + 1) % COUNT_PAGES;
 #ifdef DEBUG
       Serial.println ("goToDown");
 #endif
@@ -245,7 +244,7 @@ handleCommand ()
 {
   if (Serial.available () > 0)
     {
-      char *c_str = (char *)malloc (getCmdBufSize ());
+      char *c_str = static_cast<char *> (malloc (getCmdBufSize ()));
       if (c_str == nullptr)
         return;
       Serial.readString ().toCharArray (c_str, getCmdBufSize ());

@@ -1,8 +1,6 @@
-#ifndef VALIDATE_H
-#define VALIDATE_H
+#pragma once
 #include "sensor.h"
 
 extern int errorCode;
 
 void validatePipeline (Sensors *);
-#endif

@@ -11,7 +11,7 @@
 
 #define FILTER_ALPHA 0.15F // EMA coefficient (0..1], smaller = smoother
 #define GET_RES(value)                                                        \
-  (RESISTOR_FROM_SENSOR * (float)value / (MAX_ACP - value))
+  (RESISTOR_FROM_SENSOR * static_cast<float> (value) / (MAX_ACP - value))
 #define TEMP_INTERVAL (1000) // ms between samples
 
 // uint32_t _lastSampleMs = 0;
@@ -26,12 +26,12 @@ int16_t
 ntcTempAt (size_t i)
 {
 
-  return (int16_t)(pgm_read_word (&ntcTable[i].temp_c));
+  return static_cast<int16_t> (pgm_read_word (&ntcTable[i].temp_c));
 }
 int32_t
 ntcResAt (size_t i)
 {
-  return (int32_t)(pgm_read_dword (&ntcTable[i].resistance));
+  return static_cast<int32_t> (pgm_read_dword (&ntcTable[i].resistance));
 }
 
 float
@@ -41,13 +41,13 @@ getTemp (Sensor *sensor)
   // now = millis ();
   // if (now - sensor->lastSampleMs < TEMP_INTERVAL)
   // if (return_last)
-  // return sensor->lastTemp + (float)(sensor->correctInt);
+  // return sensor->lastTemp + static_cast<float> (sensor->correctInt);
 
   // sensor->lastSampleMs = now;
 
   int rawAdc = sensor->acp;
   if (sensor->_adcFilter < 0.0F)
-    sensor->_adcFilter = (float)(rawAdc);
+    sensor->_adcFilter = static_cast<float> (rawAdc);
   else
     // EMA: alpha * new + (1 - alpha) * old
     sensor->_adcFilter
@@ -66,7 +66,7 @@ getTemp (Sensor *sensor)
       sensor->sampleIdx = 0;
       sensor->ready = true;
     }
-  return sensor->lastTemp + (float)(sensor->correctInt);
+  return sensor->lastTemp + static_cast<float> (sensor->correctInt);
 }
 
 float
@@ -82,9 +82,9 @@ getTempFromTable (Sensor *sensor)
 
   // get max or min value
   if (sensor->resist >= ntcResAt (0))
-    return (float)(ntcTempAt (0));
+    return static_cast<float> (ntcTempAt (0));
   if (sensor->resist <= ntcResAt (NTC_TABLE_SIZE - 1))
-    return (float)(ntcTempAt (NTC_TABLE_SIZE - 1));
+    return static_cast<float> (ntcTempAt (NTC_TABLE_SIZE - 1));
 
   for (size_t i = 0; i + 1 < NTC_TABLE_SIZE; i++)
     {
@@ -98,8 +98,10 @@ getTempFromTable (Sensor *sensor)
 
       // interpolate between the two bracketing table rows
       float fraction
-          = (float)(res - sensor->resist) / (res - ntcResAt (i + 1));
-      return (float)(temp) + fraction * (float)(ntcTempAt (i + 1) - temp);
+          = static_cast<float> (res - sensor->resist)
+            / (res - ntcResAt (i + 1));
+      return static_cast<float> (temp)
+             + fraction * static_cast<float> (ntcTempAt (i + 1) - temp);
     }
   return 0.0F;
 }
