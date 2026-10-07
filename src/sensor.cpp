@@ -106,11 +106,13 @@ getTempFromTable (Sensor *sensor)
 void
 constrSensor (Sensor *sensor, uint8_t pin)
 {
-  sensor->lastSampleMs = millis ();
   uint32_t now = millis ();
   if (now - sensor->lastSampleMs < TEMP_INTERVAL)
     {
-      sensor->acp = analogRead (pin);
-      sensor->temp = getTemp (sensor);
+      // Too soon since last reading - skip
+      return;
     }
+  sensor->acp = analogRead (pin);
+  sensor->temp = getTemp (sensor);
+  sensor->lastSampleMs = now;
 }

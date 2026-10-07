@@ -3,26 +3,28 @@
 #include "constants/ntcPoint.h"
 #define ATTEMPTS 5
 
+/// Structure representing a single NTC temperature sensor.
+/// Measures temperature using a voltage divider with a series resistor.
 typedef struct Sensor
 {
-  int acp;
-  float temp;
-  float resist;
-  uint8_t pin;
-  uint32_t lastSampleMs;
-  int sampleIdx;
-  float lastTemp;
-  float samples[ATTEMPTS];
-  int correctInt;
-  float _adcFilter;
+  int acp;               ///< Raw ADC count (0-1023) from the sensor voltage divider
+  float temp;            ///< Calculated temperature in degrees Celsius
+  float resist;        ///< Calculated sensor resistance in ohms
+  uint8_t pin;         ///< Analog pin the sensor is connected to
+  uint32_t lastSampleMs;  ///< Timestamp of the last temperature sample (ms)
+  int sampleIdx;       ///< Current index in the samples buffer
+  float lastTemp;      ///< Last calculated temperature value
+  float samples[ATTEMPTS];  ///< Buffer for temperature samples (for median filtering)
+  int correctInt;      ///< Integer temperature correction offset
+  float _adcFilter;    ///< Exponential Moving Average filter coefficient for ADC readings
 } Sensor;
 
 typedef struct Sensors
 {
-  Sensor *_s_main;
-  Sensor *_s_first;
-  Sensor *_s_second;
-  Sensor *_s_street;
+  Sensor *_s_main;       ///< Pointer to main sensor structure
+  Sensor *_s_first;      ///< Pointer to first reserve sensor structure
+  Sensor *_s_second;     ///< Pointer to second reserve sensor structure
+  Sensor *_s_street;     ///< Pointer to street sensor structure
 } Sensors;
 
 float getTemp (Sensor *);

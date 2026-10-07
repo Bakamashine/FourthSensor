@@ -5,5 +5,5 @@
 static int minPermOffset = 10;
 static int maxPermOffset = 50;
 static int hyst = DEFAULT_HYSTERESIS;
-static int burnerStatus = 0;
+static bool burnerStatus = false;
 #endif

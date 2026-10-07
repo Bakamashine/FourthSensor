@@ -1,7 +1,7 @@
 #include "helper.h"
 
 void
-setFloatText (char *buf, size_t size, const char *label, float v)
+setFloatText (char *buf, size_t size, float v)
 {
   if (v < 0)
     v = -v;
@@ -14,7 +14,7 @@ setFloatText (char *buf, size_t size, const char *label, float v)
       whole += 1;
     }
 
-  snprintf (buf, size, "%s: %ld.%02ld", label, whole, frac);
+  snprintf (buf, size, "%ld.%02ld", whole, frac);
 }
 
 void

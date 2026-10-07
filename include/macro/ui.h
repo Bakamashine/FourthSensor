@@ -25,7 +25,7 @@
     {                                                                         \
       char acpBuf[8];                                                         \
       char tempBuf[10];                                                       \
-      setFloatText (tempBuf, sizeof (tempBuf), "", temp);                     \
+      setFloatText (tempBuf, sizeof (tempBuf), temp);                     \
       snprintf (acpBuf, sizeof (acpBuf), "%d", acp);                          \
       RAW_WRITE_ROW (row, text, acpBuf, tempBuf, p_cls);                      \
     }                                                                         \
