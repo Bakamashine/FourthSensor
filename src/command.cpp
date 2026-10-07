@@ -4,31 +4,14 @@
 #include "settings.h"
 #include <Arduino.h>
 #include <string.h>
-extern int minPermOffset;
-extern int maxPermOffset;
-extern int hyst;
 
-char *_firstSlice;
-char *_secondSlice;
-void
-allocateSlices ()
-{
-  _firstSlice = (char *)malloc (CMD_BUF_SIZE);
-  _secondSlice = (char *)malloc (CMD_BUF_SIZE);
-}
+const char *_firstSlice;
+const char *_secondSlice;
 
 size_t
 getCmdBufSize ()
 {
   return CMD_BUF_SIZE;
-}
-
-void
-deallocate (char *cmd)
-{
-  free (_firstSlice);
-  free (_secondSlice);
-  free (cmd);
 }
 
 void
@@ -50,8 +33,6 @@ help ()
 int
 tryParse (char *cmd)
 {
-  allocateSlices ();
-
   char *eq = strchr (cmd, '=');
   if (eq == nullptr || eq == cmd)
     return 0;
@@ -71,15 +52,10 @@ runCmd (char *cmd, Sensors *sensors)
   PRINT_DEBUG ("First=", _firstSlice);
   PRINT_DEBUG ("Second=", _secondSlice);
 #endif
-  // if (sensors->_s_main == nullptr || sensors->_s_first == nullptr
-  // || ses == nullptr || _streetSensor == nullptr)
-  // return;
-
   // hyst=<int> - set the burner hysteresis deadband
   int second_slice_value = atoi (_secondSlice);
   if (strcmp (_firstSlice, "hyst") == 0)
     {
-      // Settings::setHysteresis (second_slice_value);
       hyst = second_slice_value;
 #ifdef DEBUG_COMMAND
       Serial.println ("RUN    hyst applied");
@@ -120,7 +96,6 @@ runCmd (char *cmd, Sensors *sensors)
   // max=<int> - set the maximum permitted offset
   else if (strcmp (_firstSlice, "max") == 0)
     {
-      // Settings::setMaxPermOffset (second_slice_value);
       maxPermOffset = second_slice_value;
 #ifdef DEBUG_COMMAND
       Serial.println ("RUN    max applied");
@@ -129,7 +104,6 @@ runCmd (char *cmd, Sensors *sensors)
   // min=<int> - set the minimum permitted offset
   else if (strcmp (_firstSlice, "min") == 0)
     {
-      // Settings::setMinPermOffset (second_slice_value);
       minPermOffset = second_slice_value;
 #ifdef DEBUG_COMMAND
       Serial.println ("RUN    min applied");
@@ -139,15 +113,16 @@ runCmd (char *cmd, Sensors *sensors)
   else
     Serial.println ("RUN    no branch matched");
 #endif
-
-  deallocate (cmd);
 }
 void
 readCommandAndImpl (char *cmd, Sensors *sensors)
 {
 
   if (strlen (cmd) == 0)
-    return;
+    {
+      free (cmd);
+      return;
+    }
 #ifdef DEBUG_COMMAND
   PRINT_DEBUG ("Read command: ", cmd);
 #endif
@@ -162,8 +137,9 @@ readCommandAndImpl (char *cmd, Sensors *sensors)
       PRINT_DEBUG ("parsed second=", _secondSlice);
 #endif
       runCmd (cmd, sensors);
-      return;
     }
   else
     Serial.println ("Command not found");
+
+  free (cmd);
 }

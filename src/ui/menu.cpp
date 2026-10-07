@@ -4,6 +4,10 @@
 #include "helper.h"
 #include "macro/ui.h"
 #include "sensor.h"
+#include "settings.h"
+
+bool isValueOpen = false;
+int _selected = 0;
 
 #define MENU_ROWS_COUNT 4
 static Records _rows[MENU_ROWS_COUNT];
@@ -60,6 +64,51 @@ menuPage (U8G2 *display, Sensors *sensors)
   buildRows (sensors);
   drawPreviews (display);
   drawPoint (display);
+
+  const int size = 8;
+  char ci_main_sensor_str[size];
+  char ci_first_sensor_str[size];
+  char ci_second_sensor_str[size];
+  char ci_street_sensor_str[size];
+  setIntText (ci_main_sensor_str, size, sensors->_s_main->correctInt);
+  setIntText (ci_first_sensor_str, size, sensors->_s_first->correctInt);
+  setIntText (ci_second_sensor_str, size, sensors->_s_second->correctInt);
+  setIntText (ci_street_sensor_str, size, sensors->_s_street->correctInt);
+  RAW_WRITE_ROW (U8G2_SECOND_ROW, PREVIEW_T1, ci_main_sensor_str, nullptr,
+                 display);
+  RAW_WRITE_ROW (U8G2_THIRD_ROW, PREVIEW_T2, ci_first_sensor_str, nullptr,
+                 display);
+  RAW_WRITE_ROW (U8G2_FOURTH_ROW, PREVIEW_T3, ci_second_sensor_str, nullptr,
+                 display);
+
+  const int message_size = 16;
+  char __hyst[message_size];
+  char max_permitted_offset[message_size];
+  char min_permitted_offset[message_size];
+  snprintf (max_permitted_offset, message_size, "%s %d", PREVIEW_MAX,
+            maxPermOffset);
+  snprintf (min_permitted_offset, message_size, "%s %d", PREVIEW_MIN,
+            minPermOffset);
+  snprintf (__hyst, message_size, "%s %d", PREVIEW_HYST, hyst);
+  RAW_WRITE_ROW (U8G2_SECOND_ROW, PREVIEW_T1, nullptr, __hyst, display);
+  RAW_WRITE_ROW (U8G2_THIRD_ROW, PREVIEW_T2, nullptr, max_permitted_offset,
+                 display);
+  RAW_WRITE_ROW (U8G2_FOURTH_ROW, PREVIEW_T3, nullptr, min_permitted_offset,
+                 display);
+
+  if (isValueOpen)
+    {
+      RAW_WRITE_ROW (U8G2_FIFTH_ROW, PREVIEW_T4, ci_street_sensor_str, "ON",
+                     display);
+    }
+  else
+    {
+      char userTemperature_str[message_size];
+      snprintf (userTemperature_str, message_size, "%s %d", PREVIEW_USER_TEMP,
+                userTemperature);
+      RAW_WRITE_ROW (U8G2_FIFTH_ROW, PREVIEW_T4, ci_street_sensor_str,
+                     userTemperature_str, display);
+    }
 }
 
 void

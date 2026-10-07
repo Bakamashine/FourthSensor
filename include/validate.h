@@ -2,7 +2,7 @@
 #define VALIDATE_H
 #include "sensor.h"
 
-static int errorCode = 0;
+extern int errorCode;
 
 void validatePipeline (Sensors *);
 #endif

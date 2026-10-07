@@ -35,4 +35,5 @@
 #define PREVIEW_MAX "Max:"
 #define PREVIEW_MIN "Min:"
 #define PREVIEW_HYST "Hyst:"
+#define PREVIEW_USER_TEMP "UT:"
 // #endif

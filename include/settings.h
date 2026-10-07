@@ -2,8 +2,9 @@
 #define SETTINGS_CPP
 #include "constants/settings.h"
 
-static int minPermOffset = 10;
-static int maxPermOffset = 50;
-static int hyst = DEFAULT_HYSTERESIS;
-static bool burnerStatus = false;
+extern int minPermOffset;
+extern int maxPermOffset;
+extern int hyst;
+extern bool burnerStatus;
+extern int userTemperature;
 #endif

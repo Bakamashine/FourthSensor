@@ -64,6 +64,7 @@ getTemp (Sensor *sensor)
       sensor->lastTemp
           = FloatGetAverageValue (&sensor->samples[1], ATTEMPTS - 2);
       sensor->sampleIdx = 0;
+      sensor->ready = true;
     }
   return sensor->lastTemp + (float)(sensor->correctInt);
 }

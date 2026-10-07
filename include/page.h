@@ -9,5 +9,5 @@ typedef enum Pages
   COUNT_PAGES
 } Pages;
 
-static int currentPage = MAIN;
+extern int currentPage;
 #endif

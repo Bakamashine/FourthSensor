@@ -14,6 +14,7 @@ typedef struct Sensor
   uint32_t lastSampleMs;  ///< Timestamp of the last temperature sample (ms)
   int sampleIdx;       ///< Current index in the samples buffer
   float lastTemp;      ///< Last calculated temperature value
+  bool ready;    ///< true after the first full ATTEMPTS cycle produced a value
   float samples[ATTEMPTS];  ///< Buffer for temperature samples (for median filtering)
   int correctInt;      ///< Integer temperature correction offset
   float _adcFilter;    ///< Exponential Moving Average filter coefficient for ADC readings

@@ -3,8 +3,8 @@
 #include "sensor.h"
 #include "settings.h"
 #define PERMITTED_TEMP_DIFFERENCE 5
-extern int maxPermOffset;
-extern int minPermOffset;
+
+int errorCode = 0;
 
 int
 checkSensors (Sensors *sn)
@@ -60,11 +60,18 @@ checkTemperature (Sensors *sn)
 void
 validatePipeline (Sensors *sn)
 {
+  // until every sensor has finished its first ATTEMPTS cycle its temp is 0,
+  // which would be reported as "too cold"
+  if (!sn->_s_main->ready || !sn->_s_first->ready || !sn->_s_second->ready)
+    return;
+
   int sensor_code = checkSensors (sn);
   int temperature_code = checkTemperature (sn);
 
   if (sensor_code > 0)
     errorCode = sensor_code;
-  else if (temperature_code)
+  else if (temperature_code > 0)
     errorCode = temperature_code;
+  else
+    errorCode = 0;
 }

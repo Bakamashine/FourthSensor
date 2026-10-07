@@ -13,6 +13,6 @@ typedef struct Records
 void menuPage (U8G2 *display, Sensors *sensors);
 void menuPageIncreaseValue ();
 void menuPageDecreaseValue ();
-static bool isValueOpen = false;
-static int _selected = 0;
+extern bool isValueOpen;
+extern int _selected;
 #endif

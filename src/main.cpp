@@ -20,18 +20,8 @@ void haltSystem ();
 int systemHalted = 0;
 #endif
 
-// ui.h
-extern bool isValueOpen;
-extern int _selected;
-
 // page.h
-extern int currentPage;
-
-// validate
-extern int errorCode;
-
-// settings
-extern bool burnerStatus;
+int currentPage = SETTINGS;
 
 OLED_CLASS u8g2 (U8G2_R0);
 
@@ -57,6 +47,17 @@ void btnTick ();
 void ui ();
 void sensorSetup ();
 void ledSetup ();
+#ifdef LED_DEBUG
+void
+ledDebug ()
+{
+  digitalWrite (BURNER_PIN, HIGH);
+  digitalWrite (ERROR_PIN, LOW);
+  delay (200);
+  digitalWrite (BURNER_PIN, LOW);
+  digitalWrite (ERROR_PIN, HIGH);
+}
+#endif
 
 void
 setup ()
@@ -73,25 +74,42 @@ void
 loop ()
 {
   btnTick ();
+#ifdef LED_DEBUG
+  ledDebug ();
+#endif
   constrSensor (&s_main, MAIN_SENSOR_PIN);
   constrSensor (&s_first, FIRST_RESERVE_SENSOR_PIN);
   constrSensor (&s_second, SECOND_RESERVE_SENSOR_PIN);
   constrSensor (&s_street, STREET_SENSOR_PIN);
 #ifdef DEBUG
-  PRINT_DEBUG ("s_main acp: ", s_main.acp);
-  PRINT_DEBUG ("s_main temp: ", s_main.temp);
-  PRINT_DEBUG ("s_first acp: ", s_first.acp);
-  PRINT_DEBUG ("s_first temp: ", s_first.temp);
-  PRINT_DEBUG ("s_second acp: ", s_second.acp);
-  PRINT_DEBUG ("s_second temp: ", s_second.temp);
-  PRINT_DEBUG ("s_street acp: ", s_street.acp);
-  PRINT_DEBUG ("s_street temp: ", s_street.temp);
+  Serial.println ("=====DEBUG INPUT====");
+  // acp
+  PRINT_DEBUG ("[ACP] s_main: ", s_main.acp);
+  PRINT_DEBUG ("[ACP] s_first: ", s_first.acp);
+  PRINT_DEBUG ("[ACP] s_second: ", s_second.acp);
+  PRINT_DEBUG ("[ACP] s_street: ", s_street.acp);
 
-  PRINT_DEBUG ("burnerStatus: ", burnerStatus);
-  PRINT_DEBUG ("isValueOpen: ", isValueOpen);
-  PRINT_DEBUG ("currentPage: ", currentPage);
-  PRINT_DEBUG ("errorCode: ", errorCode);
-  PRINT_DEBUG ("_selected: ", _selected);
+  // temperature
+  PRINT_DEBUG ("[TEMP] s_main: ", s_main.temp);
+  PRINT_DEBUG ("[TEMP] s_first: ", s_first.temp);
+  PRINT_DEBUG ("[TEMP] s_second: ", s_second.temp);
+  PRINT_DEBUG ("[TEMP] s_street: ", s_street.temp);
+
+  // correct integer
+  PRINT_DEBUG ("[CORRECT INTEGER] s_main: ", s_main.correctInt);
+  PRINT_DEBUG ("[CORRECT INTEGER] s_first: ", s_first.correctInt);
+  PRINT_DEBUG ("[CORRECT INTEGER] s_second: ", s_second.correctInt);
+  PRINT_DEBUG ("[CORRECT INTEGER] s_street: ", s_street.correctInt);
+
+  // other variables
+  PRINT_DEBUG ("[SETTINGS_H] burnerStatus: ", burnerStatus);
+  PRINT_DEBUG ("[SETTINGS_H] minPermOffset: ", minPermOffset);
+  PRINT_DEBUG ("[SETTINGS_H] maxPermOffset: ", maxPermOffset);
+  PRINT_DEBUG ("[SETTINGS_H] Hysteresis: ", hyst);
+  PRINT_DEBUG ("[MENU_UI_H] isValueOpen: ", isValueOpen);
+  PRINT_DEBUG ("[MENU_UI_H] _selected: ", _selected);
+  PRINT_DEBUG ("[PAGE_H] currentPage: ", currentPage);
+  PRINT_DEBUG ("[ERROR_H] errorCode: ", errorCode);
 
 #endif
 #ifdef ENABLE_COMMANDS
@@ -228,6 +246,8 @@ handleCommand ()
   if (Serial.available () > 0)
     {
       char *c_str = (char *)malloc (getCmdBufSize ());
+      if (c_str == nullptr)
+        return;
       Serial.readString ().toCharArray (c_str, getCmdBufSize ());
       readCommandAndImpl (c_str, &sensors);
     }
