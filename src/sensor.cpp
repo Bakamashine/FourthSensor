@@ -2,16 +2,14 @@
 #include "constants/ntcPoint.hpp"
 #include "helper.hpp"
 #include "settings.hpp"
-// #include "ema.hpp"
 #include <Arduino.h>
 
 #define MAX_ACP 1023
 #define RESISTOR_FROM_SENSOR 2000 // 2kOm
 
-#define FILTER_ALPHA 1.0F // EMA coefficient (0..1], smaller = smoother
 #define GET_RES(value)                                                        \
   (RESISTOR_FROM_SENSOR * static_cast<float> (value) / (MAX_ACP - value))
-#define TEMP_INTERVAL (200) // ms between samples
+#define TEMP_INTERVAL 0 // ms between samples
 
 #define PERM_DIF 50
 
@@ -29,25 +27,9 @@ ntcResAt (size_t i)
   return static_cast<int32_t> (pgm_read_dword (&ntcTable[i].resistance));
 }
 
-static float
-filterAdc (unsigned int freshAdc, unsigned int oldAdc)
-{
-  return FILTER_ALPHA * freshAdc + (1.0F - FILTER_ALPHA) * oldAdc;
-}
-
 float
 getTemp (Sensor *sensor)
 {
-  int rawAdc = sensor->acp;
-  if (sensor->adcFilter < 0.0F)
-    sensor->adcFilter = static_cast<float> (rawAdc);
-  else
-    // EMA: alpha * new_adc + (1 - alpha) * old_adc
-    // EMA *ema = new EMA<rawAdc, uint8_t>();
-    
-    sensor->adcFilter
-    = filterAdc(rawAdc, sensor->adcFilter);
-
   // round to the nearest whole ADC count before the table lookup: the filter
   // output is fractional, and the table is indexed by an integer count
   sensor->samples[sensor->sampleIdx] = getTempFromTable (sensor);
@@ -121,7 +103,7 @@ constrSensor (Sensor *sensor, uint8_t pin)
   bool spike = sensor->lastAcp >= 0
                && (acp - sensor->lastAcp > PERM_DIF
                    || sensor->lastAcp - acp > PERM_DIF);
-  sensor->acp = acp;
+  sensor->acp = sensor->ema.filter (acp);
   if (spike)
     return;
   sensor->temp = getTemp (sensor);

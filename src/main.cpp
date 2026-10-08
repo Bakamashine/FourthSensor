@@ -149,10 +149,6 @@ sensorSetup ()
   pinMode (FIRST_RESERVE_SENSOR_PIN, INPUT);
   pinMode (SECOND_RESERVE_SENSOR_PIN, INPUT);
   pinMode (STREET_SENSOR_PIN, INPUT);
-  s_main.adcFilter = -1.0F;
-  s_first.adcFilter = -1.0F;
-  s_second.adcFilter = -1.0F;
-  s_street.adcFilter = -1.0F;
   sensors._s_main = &s_main;
   sensors._s_first = &s_first;
   sensors._s_second = &s_second;

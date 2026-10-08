@@ -1,5 +1,6 @@
 #pragma once
 #include "constants/ntcPoint.hpp"
+#include "ema.hpp"
 #define ATTEMPTS 5
 
 /// correction is an offset in degrees, keep it a sane displayable value
@@ -22,8 +23,7 @@ struct Sensor
   float samples[ATTEMPTS]; ///< Buffer for temperature samples (for median
                            ///< filtering)
   int correctInt;          ///< Integer temperature correction offset
-  float adcFilter; ///< Exponential Moving Average filter coefficient for ADC
-                    ///< readings
+  EMA<5, uint16_t> ema; ///< integer EMA over the raw ADC, alpha = 1/8
 };
 
 struct Sensors
