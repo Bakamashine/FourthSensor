@@ -10,10 +10,11 @@
 /// Measures temperature using a voltage divider with a series resistor.
 struct Sensor
 {
-  int acp;      ///< Raw ADC count (0-1023) from the sensor voltage divider
-  float temp;   ///< Calculated temperature in degrees Celsius
-  float resist; ///< Calculated sensor resistance in ohms
-  uint8_t pin;  ///< Analog pin the sensor is connected to
+  int acp;          ///< Raw ADC count (0-1023) from the sensor voltage divider
+  int lastAcp = -1; ///< Previous raw ADC, -1 until the first reading
+  float temp;       ///< Calculated temperature in degrees Celsius
+  float resist;     ///< Calculated sensor resistance in ohms
+  uint8_t pin;      ///< Analog pin the sensor is connected to
   uint32_t lastSampleMs; ///< Timestamp of the last temperature sample (ms)
   int sampleIdx;         ///< Current index in the samples buffer
   float lastTemp;        ///< Last calculated temperature value

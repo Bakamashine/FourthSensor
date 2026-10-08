@@ -12,7 +12,7 @@ int _selected = 0;
 /// bounds for the settings that are not sensor corrections
 #define HYST_MIN 0
 #define HYST_MAX 50
-#define HYST_STEP 0.5F
+#define HYST_STEP 0.01F
 #define OFFSET_MIN 0
 #define OFFSET_MAX 200
 #define UTEMP_MIN 0
@@ -124,15 +124,15 @@ buildItems (Sensors *sensors)
 static void
 setStepText (char *buf, size_t size, float v)
 {
-  long scaled = static_cast<long> (v * 10.0F + (v < 0.0F ? -0.5F : 0.5F));
-  long frac = scaled % 10;
+  long scaled = static_cast<long> (v * 100.0F + (v < 0.0F ? -0.05F : 0.05F));
+  long frac = scaled % 100;
   if (frac < 0)
     frac = -frac;
 
   if (frac == 0)
-    snprintf (buf, size, "%ld", scaled / 10);
+    snprintf (buf, size, "%ld", scaled / 100);
   else
-    snprintf (buf, size, "%ld.%ld", scaled / 10, frac);
+    snprintf (buf, size, "%ld.%02ld", scaled / 100, frac);
 }
 
 static void

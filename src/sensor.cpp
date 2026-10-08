@@ -12,6 +12,8 @@
   (RESISTOR_FROM_SENSOR * static_cast<float> (value) / (MAX_ACP - value))
 #define TEMP_INTERVAL (1000) // ms between samples
 
+#define PERM_DIF 50
+
 float getTempFromTable (Sensor *);
 
 int16_t
@@ -100,12 +102,20 @@ constrSensor (Sensor *sensor, uint8_t pin)
   uint32_t now = millis ();
   if (now - sensor->lastSampleMs < TEMP_INTERVAL)
     {
-      // Too soon since last reading - skip
+
       return;
     }
-  sensor->acp = analogRead (pin);
-  sensor->temp = getTemp (sensor);
+
+  int acp = analogRead (pin);
   sensor->lastSampleMs = now;
+
+  bool spike = sensor->lastAcp >= 0
+               && (acp - sensor->lastAcp > PERM_DIF
+                   || sensor->lastAcp - acp > PERM_DIF);
+  sensor->acp = acp;
+  if (spike)
+    return;
+  sensor->temp = getTemp (sensor);
 }
 
 int

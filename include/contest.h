@@ -34,6 +34,6 @@
 #define PREVIEW_T4 "Sens4:"
 #define PREVIEW_MAX "Max:"
 #define PREVIEW_MIN "Min:"
-#define PREVIEW_HYST "Hyst:"
+#define PREVIEW_HYST "H:"
 #define PREVIEW_USER_TEMP "UT:"
 // #endif

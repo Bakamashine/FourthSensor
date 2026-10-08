@@ -20,6 +20,8 @@ void haltSystem ();
 int systemHalted = 0;
 #endif
 
+#define LED_BUILD_STATUS defined (ENABLE_BURNER) | defined (ENABLE_VALIDATE)
+
 // page.h
 int currentPage = MAIN;
 
@@ -44,10 +46,14 @@ void btnMenuOnClick ();
 void btnMenuLongPress ();
 void btnTick ();
 
+#ifdef ENABLE_BURNER
 void burnerSystem ();
+#endif
 void ui ();
 void sensorSetup ();
+#if LED_BUILD_STATUS
 void ledSetup ();
+#endif
 #ifdef LED_DEBUG
 void
 ledDebug ()
@@ -68,7 +74,9 @@ setup ()
 
   sensorSetup ();
   btnSetup ();
+#if LED_BUILD_STATUS
   ledSetup ();
+#endif
 }
 
 void
@@ -102,15 +110,19 @@ loop ()
   PRINT_DEBUG ("[CORRECT INTEGER] s_second: ", s_second.correctInt);
   PRINT_DEBUG ("[CORRECT INTEGER] s_street: ", s_street.correctInt);
 
-  // other variables
+// other variables
+#ifdef ENABLE_BURNER
   PRINT_DEBUG ("[SETTINGS_H] burnerStatus: ", burnerStatus);
+#endif
   PRINT_DEBUG ("[SETTINGS_H] minPermOffset: ", minPermOffset);
   PRINT_DEBUG ("[SETTINGS_H] maxPermOffset: ", maxPermOffset);
   PRINT_DEBUG ("[SETTINGS_H] Hysteresis: ", hyst);
   PRINT_DEBUG ("[MENU_UI_H] isValueOpen: ", isValueOpen);
   PRINT_DEBUG ("[MENU_UI_H] _selected: ", _selected);
   PRINT_DEBUG ("[PAGE_H] currentPage: ", currentPage);
+#ifdef ENABLE_VALIDATE
   PRINT_DEBUG ("[ERROR_H] errorCode: ", errorCode);
+#endif
 
 #endif
 #ifdef ENABLE_COMMANDS
@@ -125,7 +137,9 @@ loop ()
     haltSystem ();
 #endif
 
+#ifdef ENABLE_BURNER
   burnerSystem ();
+#endif
 }
 
 void
@@ -166,15 +180,21 @@ btnSetup ()
   btn_minus.attachLongPressStart (btnMinusLongPress);
 }
 
+#if LED_BUILD_STATUS
 void
 ledSetup ()
 {
+#ifdef ENABLE_BURNER
   // burner
   pinMode (BURNER_PIN, OUTPUT);
+#endif
 
+#ifdef ENABLE_VALIDATE
   // error
   pinMode (ERROR_PIN, OUTPUT);
+#endif
 }
+#endif
 
 void
 btnMenuOnClick ()
@@ -273,9 +293,12 @@ ui ()
         case SETTINGS:
           menuPage (&u8g2, &sensors);
           break;
+
+#ifdef ENABLE_VALIDATE
         case ERROR:
           errorPage (&u8g2, errorCode);
           break;
+#endif
         }
     }
   while (u8g2.nextPage ());
@@ -297,6 +320,7 @@ haltSystem ()
 }
 #endif
 
+#ifdef ENABLE_BURNER
 void
 burnerSystem ()
 {
@@ -309,3 +333,4 @@ burnerSystem ()
       digitalWrite (BURNER_PIN, LOW);
     }
 }
+#endif
