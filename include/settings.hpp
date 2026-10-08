@@ -1,6 +1,6 @@
 #pragma once
-#include "constants/settings.h"
-#include "sensor.h"
+#include "constants/settings.hpp"
+#include "sensor.hpp"
 
 extern int minPermOffset;
 extern int maxPermOffset;

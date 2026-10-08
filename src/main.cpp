@@ -1,21 +1,21 @@
 #include "OneButtonTiny.h"
-#include "constants/constants.h"
-#include "constants/pin.h"
-#include "constants/settings.h"
-#include "macro/debugUi.h"
-#include "page.h"
-#include "sensor.h"
-#include "settings.h"
-#include "ui/main_ui.h"
-#include "ui/menu.h"
+#include "constants/constants.hpp"
+#include "constants/pin.hpp"
+#include "constants/settings.hpp"
+#include "macro/debugUi.hpp"
+#include "page.hpp"
+#include "sensor.hpp"
+#include "settings.hpp"
+#include "ui/main_ui.hpp"
+#include "ui/menu.hpp"
 #include <Arduino.h>
 #include <U8g2lib.h>
 #ifdef ENABLE_COMMANDS
-#include "command.h"
+#include "command.hpp"
 void handleCommand ();
 #endif
 #ifdef ENABLE_VALIDATE
-#include "validate.h"
+#include "validate.hpp"
 void haltSystem ();
 int systemHalted = 0;
 #endif
@@ -149,10 +149,10 @@ sensorSetup ()
   pinMode (FIRST_RESERVE_SENSOR_PIN, INPUT);
   pinMode (SECOND_RESERVE_SENSOR_PIN, INPUT);
   pinMode (STREET_SENSOR_PIN, INPUT);
-  s_main._adcFilter = -1.0F;
-  s_first._adcFilter = -1.0F;
-  s_second._adcFilter = -1.0F;
-  s_street._adcFilter = -1.0F;
+  s_main.adcFilter = -1.0F;
+  s_first.adcFilter = -1.0F;
+  s_second.adcFilter = -1.0F;
+  s_street.adcFilter = -1.0F;
   sensors._s_main = &s_main;
   sensors._s_first = &s_first;
   sensors._s_second = &s_second;

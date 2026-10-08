@@ -1,5 +1,5 @@
-#include "ui/helper.h"
-#include "macro/ui.h"
+#include "ui/helper.hpp"
+#include "macro/ui.hpp"
 int
 drawCentered (U8G2 *display, const char *text, int padding_top,
               int padding_bottom, int padding_left, int padding_right)

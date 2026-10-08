@@ -1,5 +1,5 @@
 #pragma once
-#include "sensor.h"
+#include "sensor.hpp"
 #define CMD_BUF_SIZE 20
 
 void readCommandAndImpl (char *, Sensors *);

@@ -1,6 +1,6 @@
-#include "ui/error.h"
-#include "page.h"
-#include "ui/helper.h"
+#include "ui/error.hpp"
+#include "page.hpp"
+#include "ui/helper.hpp"
 void
 errorPage (U8G2 *display, int error_code)
 {

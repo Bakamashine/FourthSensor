@@ -1,7 +1,7 @@
-#include "command.h"
-#include "constants/settings.h"
-#include "macro/debugUi.h"
-#include "settings.h"
+#include "command.hpp"
+#include "constants/settings.hpp"
+#include "macro/debugUi.hpp"
+#include "settings.hpp"
 #include <Arduino.h>
 #include <string.h>
 

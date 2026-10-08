@@ -1,4 +1,4 @@
-#include "helper.h"
+#include "helper.hpp"
 
 void
 setFloatText (char *buf, size_t size, float v)

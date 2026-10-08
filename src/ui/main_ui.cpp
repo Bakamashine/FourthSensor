@@ -1,8 +1,8 @@
-#include "ui/main_ui.h"
-#include "contest.h"
-#include "helper.h"
-#include "macro/ui.h"
-#include "sensor.h"
+#include "ui/main_ui.hpp"
+#include "contest.hpp"
+#include "helper.hpp"
+#include "macro/ui.hpp"
+#include "sensor.hpp"
 
 void
 mainPage (U8G2 *display, Sensors *sensors)

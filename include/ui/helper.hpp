@@ -1,5 +1,5 @@
 #pragma once
-#include "sensor.h"
+#include "sensor.hpp"
 #include <Arduino.h>
 #include <U8g2lib.h>
 int drawCentered (U8G2 *display, const char *text, int padding_top,

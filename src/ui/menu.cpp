@@ -1,10 +1,10 @@
-#include "ui/menu.h"
+#include "ui/menu.hpp"
 
-#include "contest.h"
-#include "helper.h"
-#include "macro/ui.h"
-#include "sensor.h"
-#include "settings.h"
+#include "contest.hpp"
+#include "helper.hpp"
+#include "macro/ui.hpp"
+#include "sensor.hpp"
+#include "settings.hpp"
 
 bool isValueOpen = false;
 int _selected = 0;

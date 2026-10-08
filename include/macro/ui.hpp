@@ -1,5 +1,5 @@
 #pragma once
-#include "constants/ui.h"
+#include "constants/ui.hpp"
 #define _CENTER_X(display, text)                                              \
   ((OLED_WIDTH - display->getStrWidth (text)) / 2)
 #define _CENTER_Y(display) ((OLED_HEIGHT + display->getFontAscent ()) / 2 - 25)

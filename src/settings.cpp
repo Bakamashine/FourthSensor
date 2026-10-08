@@ -1,6 +1,6 @@
-#include "settings.h"
-#include "sensor.h"
-#include "validate.h"
+#include "settings.hpp"
+#include "sensor.hpp"
+#include "validate.hpp"
 
 int minPermOffset = 10;
 

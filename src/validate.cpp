@@ -1,7 +1,7 @@
-#include "validate.h"
-#include "helper.h"
-#include "sensor.h"
-#include "settings.h"
+#include "validate.hpp"
+#include "helper.hpp"
+#include "sensor.hpp"
+#include "settings.hpp"
 #define PERMITTED_TEMP_DIFFERENCE 5
 
 int errorCode = 0;
