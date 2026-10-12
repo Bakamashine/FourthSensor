@@ -22,8 +22,8 @@
  * @tparam  K
  *          The amount of bits to shift by. This determines the location
  *          of the pole in the EMA transfer function, and therefore the
- *          cut-off frequency.  
- *          The higher this number, the more filtering takes place.  
+ *          cut-off frequency.
+ *          The higher this number, the more filtering takes place.
  *          The pole location is @f$ 1 - 2^{-K} @f$.
  * @tparam  uint_t
  *          The (signed) integer type to use for the input, intermediate values
@@ -32,41 +32,41 @@
  *          is the maximum number of bits of the input.
  *          In case of the Arduino's built-in ADC,
  *          @f$ M = 10 = \log_2(1024) @f$.
- * 
+ *
  * @ingroup    Utilities
  */
 template <uint8_t K, class uint_t>
 class EMA {
-  public:
-    /**
-     * @brief   Filter the input: Given @f$ x[n] @f$, calculate @f$ y[n] @f$.
-     *
-     * @param   input
-     *          The new raw input value.
-     * @return  The new filtered output value.
-     */
-    uint_t filter(uint_t input) {
-        filtered += input;
-        uint_t output = (filtered + fixedPointAHalf) >> K;
-        filtered -= output;
-        return output;
-    }
+ public:
+  /**
+   * @brief   Filter the input: Given @f$ x[n] @f$, calculate @f$ y[n] @f$.
+   *
+   * @param   input
+   *          The new raw input value.
+   * @return  The new filtered output value.
+   */
+  uint_t filter(uint_t input) {
+    filtered += input;
+    uint_t output = (filtered + fixedPointAHalf) >> K;
+    filtered -= output;
+    return output;
+  }
 
-    /**
-     * @brief   Filter the input: Given @f$ x[n] @f$, calculate @f$ y[n] @f$.
-     *
-     * @param   value
-     *          The new raw input value.
-     * @return  The new filtered output value.
-     */
-    uint_t operator()(uint_t value) { return filter(value); }
+  /**
+   * @brief   Filter the input: Given @f$ x[n] @f$, calculate @f$ y[n] @f$.
+   *
+   * @param   value
+   *          The new raw input value.
+   * @return  The new filtered output value.
+   */
+  uint_t operator()(uint_t value) { return filter(value); }
 
-    static_assert(
-        uint_t(0) < uint_t(-1), // Check that `uint_t` is an unsigned type
-        "Error: the uint_t type should be an unsigned integer, otherwise, "
-        "the division using bit shifts is invalid.");
+  static_assert(
+      uint_t(0) < uint_t(-1),  // Check that `uint_t` is an unsigned type
+      "Error: the uint_t type should be an unsigned integer, otherwise, "
+      "the division using bit shifts is invalid.");
 
-  private:
-    uint_t filtered = 0;
-    constexpr static uint_t fixedPointAHalf = 1 << (K - 1);
+ private:
+  uint_t filtered = 0;
+  constexpr static uint_t fixedPointAHalf = 1 << (K - 1);
 };

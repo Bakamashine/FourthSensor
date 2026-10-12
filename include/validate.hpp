@@ -3,4 +3,4 @@
 
 extern int errorCode;
 
-void validatePipeline (Sensors *);
+void validatePipeline(Sensors *);

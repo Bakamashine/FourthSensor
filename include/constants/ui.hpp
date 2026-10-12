@@ -17,15 +17,15 @@
 #define U8G2_COLUMN_STEP 39
 #define U8G2_ROW_STEP 12
 
-#define U8G2_FIRST_COLUMN (U8G2_MARGIN_X + 0 * U8G2_COLUMN_STEP)  // 5
-#define U8G2_SECOND_COLUMN (U8G2_MARGIN_X + 1 * U8G2_COLUMN_STEP) // 44
-#define U8G2_THIRD_COLUMN (U8G2_MARGIN_X + 2 * U8G2_COLUMN_STEP)  // 83
+#define U8G2_FIRST_COLUMN (U8G2_MARGIN_X + 0 * U8G2_COLUMN_STEP)   // 5
+#define U8G2_SECOND_COLUMN (U8G2_MARGIN_X + 1 * U8G2_COLUMN_STEP)  // 44
+#define U8G2_THIRD_COLUMN (U8G2_MARGIN_X + 2 * U8G2_COLUMN_STEP)   // 83
 
-#define U8G2_FIRST_ROW (U8G2_MARGIN_Y + 0 * U8G2_ROW_STEP)  // 5
-#define U8G2_SECOND_ROW (U8G2_MARGIN_Y + 1 * U8G2_ROW_STEP) // 17
-#define U8G2_THIRD_ROW (U8G2_MARGIN_Y + 2 * U8G2_ROW_STEP)  // 29
-#define U8G2_FOURTH_ROW (U8G2_MARGIN_Y + 3 * U8G2_ROW_STEP) // 41
-#define U8G2_FIFTH_ROW (U8G2_MARGIN_Y + 4 * U8G2_ROW_STEP)  // 53
+#define U8G2_FIRST_ROW (U8G2_MARGIN_Y + 0 * U8G2_ROW_STEP)   // 5
+#define U8G2_SECOND_ROW (U8G2_MARGIN_Y + 1 * U8G2_ROW_STEP)  // 17
+#define U8G2_THIRD_ROW (U8G2_MARGIN_Y + 2 * U8G2_ROW_STEP)   // 29
+#define U8G2_FOURTH_ROW (U8G2_MARGIN_Y + 3 * U8G2_ROW_STEP)  // 41
+#define U8G2_FIFTH_ROW (U8G2_MARGIN_Y + 4 * U8G2_ROW_STEP)   // 53
 
 #define ROWS 5
 
@@ -34,11 +34,11 @@
 
 /// selection marker for the right half of the menu, just before the third
 /// column so it does not collide with the values of the first half
-#define U8G2_MENU_MARKER2_X (U8G2_THIRD_COLUMN - 8) // 75
+#define U8G2_MENU_MARKER2_X (U8G2_THIRD_COLUMN - 8)  // 75
 
 /// edit mode indicator, top right corner (next to the page title)
 #define U8G2_EDIT_X (OLED_WIDTH - 20)
 #define U8G2_EDIT_Y U8G2_FIRST_ROW
 
-#define VERSION_X getWidth () - 28
+#define VERSION_X getWidth() - 28
 #define VERSION_Y 10

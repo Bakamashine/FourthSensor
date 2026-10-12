@@ -10,4 +10,4 @@ extern bool burnerStatus;
 #endif
 extern int uTemp;
 
-bool checkTempForBurner (Sensors *);
+bool checkTempForBurner(Sensors *);

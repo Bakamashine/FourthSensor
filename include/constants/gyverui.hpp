@@ -26,18 +26,18 @@
 // 5 rows: (64 - 8 (font height) - 2 * 5 (margin)) / 4 = 11
 #define ROW_STEP 12
 
-#define G_FIRST_COLUMN (MARGIN_X + 0 * COLUMN_STEP)  // 5
-#define G_SECOND_COLUMN (MARGIN_X + 1 * COLUMN_STEP) // 44
-#define G_THIRD_COLUMN (MARGIN_X + 2 * COLUMN_STEP)  // 83
+#define G_FIRST_COLUMN (MARGIN_X + 0 * COLUMN_STEP)   // 5
+#define G_SECOND_COLUMN (MARGIN_X + 1 * COLUMN_STEP)  // 44
+#define G_THIRD_COLUMN (MARGIN_X + 2 * COLUMN_STEP)   // 83
 
-#define G_FIRST_ROW (MARGIN_Y + 0 * ROW_STEP)  // 5
-#define G_SECOND_ROW (MARGIN_Y + 1 * ROW_STEP) // 17
-#define G_THIRD_ROW (MARGIN_Y + 2 * ROW_STEP)  // 29
-#define G_FOURTH_ROW (MARGIN_Y + 3 * ROW_STEP) // 41
-#define G_FIFTH_ROW (MARGIN_Y + 4 * ROW_STEP)  // 53
+#define G_FIRST_ROW (MARGIN_Y + 0 * ROW_STEP)   // 5
+#define G_SECOND_ROW (MARGIN_Y + 1 * ROW_STEP)  // 17
+#define G_THIRD_ROW (MARGIN_Y + 2 * ROW_STEP)   // 29
+#define G_FOURTH_ROW (MARGIN_Y + 3 * ROW_STEP)  // 41
+#define G_FIFTH_ROW (MARGIN_Y + 4 * ROW_STEP)   // 53
 
-#define G_CENTERED_X(column, text)                                            \
-  ((column) + (COLUMN_STEP - getStrWidth (text)) / 2)
+#define G_CENTERED_X(column, text) \
+  ((column) + (COLUMN_STEP - getStrWidth(text)) / 2)
 
 /// columns
 // acp

@@ -11,10 +11,10 @@
 // #define ENABLE_BURNER
 
 // acp filter
-// #define EMA_FILTER 
-#define MEDIAN_FILTER 
+// #define EMA_FILTER
+#define MEDIAN_FILTER
 
-// debug 
+// debug
 // #define DEBUG
 // #define LED_DEBUG
 // #define DEBUG_COMMAND
