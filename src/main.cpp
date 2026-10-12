@@ -157,6 +157,11 @@ void sensorSetup() {
   sensors._s_first = &s_first;
   sensors._s_second = &s_second;
   sensors._s_street = &s_street;
+
+  sensorFilterInit(&s_main, MAIN_SENSOR_PIN);
+  sensorFilterInit(&s_first, FIRST_RESERVE_SENSOR_PIN);
+  sensorFilterInit(&s_second, SECOND_RESERVE_SENSOR_PIN);
+  sensorFilterInit(&s_street, STREET_SENSOR_PIN);
 }
 
 void btnSetup() {

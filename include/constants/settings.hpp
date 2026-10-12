@@ -4,14 +4,14 @@
 #define DEFAULT_HYSTERESIS 0.07F
 
 /// settings
-#define ENABLE_COMMANDS
+// #define ENABLE_COMMANDS
 
 // #define SHOW_START_WINDOW
 // #define ENABLE_VALIDATE
 // #define ENABLE_BURNER
 
 // acp filter
-// #define EMA_FILTER
+#define EMA_FILTER
 #define MEDIAN_FILTER
 
 // debug

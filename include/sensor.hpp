@@ -4,7 +4,7 @@
 
 #ifdef EMA_FILTER
 #include "ema.hpp"
-#define EMA_K 7
+#define EMA_K 5
 #endif
 #ifdef MEDIAN_FILTER
 #include "MedianFilter.h"
@@ -21,7 +21,8 @@
 /// Measures temperature using a voltage divider with a series resistor.
 struct Sensor {
   int acp;           ///< Raw ADC count (0-1023) from the sensor voltage divider
-  int lastAcp = -1;  ///< Previous raw ADC, -1 until the first reading
+  int lastAcp = -1;  ///< Last accepted raw ADC, -1 until the first reading
+  uint8_t spikeCount = 0;
   float temp;        ///< Calculated temperature in degrees Celsius
   float resist;      ///< Calculated sensor resistance in ohms
   uint8_t pin;       ///< Analog pin the sensor is connected to
@@ -31,6 +32,7 @@ struct Sensor {
   bool ready;  ///< true after the first full ATTEMPTS cycle produced a value
   float samples[ATTEMPTS];  ///< Buffer for temperature samples (for median
                             ///< filtering)
+  // bool increase = false;
   int correctInt;           ///< Integer temperature correction offset
 #ifdef EMA_FILTER
   EMA<EMA_K, uint32_t> ema;  ///< integer EMA over the raw ADC, alpha = 1/8
@@ -50,7 +52,7 @@ struct Sensors {
 
 float getTemp(Sensor *);
 void constrSensor(Sensor *, uint8_t pin);
-void sensorFilterInit(Sensor *sensor);
+void sensorFilterInit(Sensor *sensor, uint8_t pin);
 
 int16_t ntcTempAt(size_t i);
 int32_t ntcResAt(size_t i);

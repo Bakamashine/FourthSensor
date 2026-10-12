@@ -17,6 +17,7 @@
 #define TEMP_INTERVAL 0  // ms between samples
 
 #define PERM_DIF 150
+#define SPIKE_LIMIT 3
 
 float getTempFromTable(Sensor *);
 
@@ -35,10 +36,14 @@ float getTemp(Sensor *sensor) {
 
   if (sensor->sampleIdx >= ATTEMPTS) {
     sort(sensor->samples, ATTEMPTS);
+    // float averages[3];
+    // for (int i = 0; i<3;i++)
+    //   averages[i] = FloatGetAverageValue(&sensor->samples[1], ATTEMPTS-2);
     float average = FloatGetAverageValue(&sensor->samples[1], ATTEMPTS - 2);
 
     if (!sensor->ready || average - sensor->lastTemp > hyst ||
         sensor->lastTemp - average > hyst)
+
       sensor->lastTemp = average;
 
     sensor->sampleIdx = 0;
@@ -76,6 +81,27 @@ float getTempFromTable(Sensor *sensor) {
   return 0.0F;
 }
 
+void sensorFilterInit(Sensor *sensor, uint8_t pin) {
+  sensor->pin = pin;
+#if defined(MEDIAN_FILTER) || defined(EMA_FILTER)
+  int init = analogRead(pin);
+#endif
+
+#ifdef MEDIAN_FILTER
+  sensor->median.numNodes = WINDOW_SIZE;
+  sensor->median.medianBuffer = sensor->medianBuffer;
+  if (MEDIANFILTER_Init(&sensor->median) == 0) {
+    for (uint8_t i = 0; i < WINDOW_SIZE; i++)
+      MEDIANFILTER_Insert(&sensor->median, init);
+  } else {
+    sensor->median.numNodes = 0;
+  }
+#endif
+#ifdef EMA_FILTER
+  for (uint16_t i = 0; i < (1u << EMA_K); i++) sensor->ema.filter(init);
+#endif
+}
+
 void constrSensor(Sensor *sensor, uint8_t pin) {
   uint32_t now = millis();
   if (now - sensor->lastSampleMs < TEMP_INTERVAL) {
@@ -85,62 +111,54 @@ void constrSensor(Sensor *sensor, uint8_t pin) {
   int acp = analogRead(pin);
   sensor->lastSampleMs = now;
 
-  bool spike = sensor->lastAcp >= 0 && (acp - sensor->lastAcp > PERM_DIF ||
-                                        sensor->lastAcp - acp > PERM_DIF);
-#if defined(EMA_FILTER) && defined(MEDIAN_FILTER)
-  auto ema_filtered_acp = sensor->ema.filter(acp);
-#ifdef DEBUG
-  PRINT_DEBUG("ema_filtered_acp: ", ema_filtered_acp);
-#endif
-
-  sensor->median.numNodes = WINDOW_SIZE;
-  sensor->median.medianBuffer = sensor->medianBuffer;
-  MEDIANFILTER_Init(&sensor->median);
-
-  uint16_t init_val = acp;
-  for (uint8_t i = 0; i < WINDOW_SIZE; i++)
-    MEDIANFILTER_Insert(&sensor->median, init_val);
-
-  for (int i = 0; i < (1 << EMA_K); i++) sensor->ema.filter(init_val);
-
+  if (sensor->lastAcp >= 0 && abs(acp - sensor->lastAcp) > PERM_DIF) {
+    if (sensor->spikeCount < SPIKE_LIMIT) {
+      sensor->spikeCount++;
+      return;
+    }
+  } else {
+    sensor->spikeCount = 0;
+  }
   sensor->lastAcp = acp;
 
-  uint16_t med = MEDIANFILTER_Insert(&sensor->median, acp);
+#if defined(EMA_FILTER) && defined(MEDIAN_FILTER)
+  uint16_t med =
+      sensor->median.numNodes != 0
+          ? static_cast<uint16_t>(MEDIANFILTER_Insert(&sensor->median, acp))
+          : static_cast<uint16_t>(acp);
   sensor->acp = sensor->ema.filter(med);
-
 #elif defined(EMA_FILTER)
   sensor->acp = sensor->ema.filter(acp);
 #elif defined(MEDIAN_FILTER)
-  // the filter state has to survive between samples, so it lives in Sensor and
-  // is initialised once, on the first call
-  if (sensor->median.numNodes == 0) {
-    sensor->median.numNodes = WINDOW_SIZE;
-    sensor->median.medianBuffer = sensor->medianBuffer;
-    MEDIANFILTER_Init(&sensor->median);
-    // Init zero-fills the window, which would drag the median down during
-    // warm-up: prime every node with the first real sample instead
-    for (uint8_t i = 0; i < WINDOW_SIZE; i++)
-      MEDIANFILTER_Insert(&sensor->median, acp);
-  }
-  sensor->acp = MEDIANFILTER_Insert(&sensor->median, acp);
+  sensor->acp = sensor->median.numNodes != 0
+                    ? MEDIANFILTER_Insert(&sensor->median, acp)
+                    : acp;
 #else
   sensor->acp = acp;
 #endif
-  if (spike) return;
   sensor->temp = getTemp(sensor);
 }
 
 int getIAverageTemp(Sensors *sn) {
-  int temp[] = {static_cast<int>(sn->_s_main->temp),
-                static_cast<int>(sn->_s_first->temp),
-                static_cast<int>(sn->_s_second->temp)};
-  float averageVal =
-      IntegerGetAverageValue(temp, sizeof(temp) / sizeof(temp[0]));
-  return static_cast<int>(averageVal);
+  Sensor *all[] = {sn->_s_main, sn->_s_first, sn->_s_second};
+  int temp[3];
+  int count = 0;
+  for (Sensor *sensor : all) {
+    if (!sensor->ready) continue;
+    temp[count++] = static_cast<int>(sensor->temp);
+  }
+  if (count == 0) return 0;
+  return IntegerGetAverageValue(temp, count);
 }
 
 float getFAverageTemp(Sensors *sn) {
-  float temp[] = {sn->_s_main->temp, sn->_s_first->temp, sn->_s_second->temp};
-  float averageVal = FloatGetAverageValue(temp, sizeof(temp) / sizeof(temp[0]));
-  return averageVal;
+  Sensor *all[] = {sn->_s_main, sn->_s_first, sn->_s_second};
+  float temp[3];
+  int count = 0;
+  for (Sensor *sensor : all) {
+    if (!sensor->ready) continue;
+    temp[count++] = sensor->temp;
+  }
+  if (count == 0) return 0.0F;
+  return FloatGetAverageValue(temp, count);
 }
