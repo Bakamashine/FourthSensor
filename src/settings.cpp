@@ -1,4 +1,5 @@
 #include "settings.hpp"
+
 #include "sensor.hpp"
 #include "validate.hpp"
 
@@ -9,15 +10,11 @@ float hyst = DEFAULT_HYSTERESIS;
 bool burnerStatus = false;
 int uTemp = 40;
 
-bool
-checkTempForBurner (Sensors *sn)
-{
-  if (errorCode > 0)
-    return false;
-  int averageTemp = getIAverageTemp (sn);
+bool checkTempForBurner(Sensors *sn) {
+  if (errorCode > 0) return false;
+  int averageTemp = getIAverageTemp(sn);
   // if (averageTemp + hyst >= uTemp)
   //   return false;
-  if (averageTemp - hyst <= uTemp)
-    return true;
+  if (averageTemp - hyst <= uTemp) return true;
   return false;
 }

@@ -5,11 +5,16 @@
 
 /// settings
 #define ENABLE_COMMANDS
-// #define DEBUG_COMMAND
 
 // #define SHOW_START_WINDOW
 // #define ENABLE_VALIDATE
 // #define ENABLE_BURNER
-#define DEBUG
 
+// acp filter
+// #define EMA_FILTER 
+#define MEDIAN_FILTER 
+
+// debug 
+// #define DEBUG
 // #define LED_DEBUG
+// #define DEBUG_COMMAND

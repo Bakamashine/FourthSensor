@@ -1,6 +1,16 @@
 #pragma once
 #include "constants/ntcPoint.hpp"
+#include "constants/settings.hpp"
+
+#ifdef EMA_FILTER
 #include "ema.hpp"
+#define EMA_K 7
+#endif
+#ifdef MEDIAN_FILTER
+#include "MedianFilter.h"
+#define WINDOW_SIZE 5 ///< sliding window length, must be odd and > 1
+#endif
+
 #define ATTEMPTS 5
 
 /// correction is an offset in degrees, keep it a sane displayable value
@@ -23,7 +33,13 @@ struct Sensor
   float samples[ATTEMPTS]; ///< Buffer for temperature samples (for median
                            ///< filtering)
   int correctInt;          ///< Integer temperature correction offset
-  EMA<5, uint16_t> ema; ///< integer EMA over the raw ADC, alpha = 1/8
+#ifdef EMA_FILTER
+  EMA<EMA_K, uint32_t> ema; ///< integer EMA over the raw ADC, alpha = 1/8
+  #endif
+#ifdef MEDIAN_FILTER
+  MedianFilter_t median; ///< sliding window median over the raw ADC
+  MedianFilterNode_t medianBuffer[WINDOW_SIZE]; ///< caller-owned nodes
+#endif
 };
 
 struct Sensors

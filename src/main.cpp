@@ -1,3 +1,6 @@
+#include <Arduino.h>
+#include <U8g2lib.h>
+
 #include "OneButtonTiny.h"
 #include "constants/constants.hpp"
 #include "constants/pin.hpp"
@@ -8,24 +11,34 @@
 #include "settings.hpp"
 #include "ui/main_ui.hpp"
 #include "ui/menu.hpp"
-#include <Arduino.h>
-#include <U8g2lib.h>
 #ifdef ENABLE_COMMANDS
 #include "command.hpp"
-void handleCommand ();
+void handleCommand();
 #endif
 #ifdef ENABLE_VALIDATE
 #include "validate.hpp"
-void haltSystem ();
+void haltSystem();
 int systemHalted = 0;
 #endif
+// #ifdef MEDIAN_FILTER
+// #include "MedianFilter.h"
+// static sMedianFilter_t filter;
+// static sMedianNode_t buffer[WINDOW_SIZE];
+// void
+// medianFilterSetup ()
+// {
+//   filter.numNodes = WINDOW_SIZE;
+//   filter.medianBuffer = buffer;
+//   MEDIANFILTER_Init (&filter);
+// }
+// #endif
 
-#define LED_BUILD_STATUS defined (ENABLE_BURNER) | defined (ENABLE_VALIDATE)
+#define LED_BUILD_STATUS defined(ENABLE_BURNER) | defined(ENABLE_VALIDATE)
 
 // page.h
 int currentPage = MAIN;
 
-OLED_CLASS u8g2 (U8G2_R0);
+OLED_CLASS u8g2(U8G2_R0);
 
 Sensor s_main;
 Sensor s_first;
@@ -33,300 +46,246 @@ Sensor s_second;
 Sensor s_street;
 Sensors sensors;
 
-OneButtonTiny btn_plus (PLUS_BTN_PIN);
-OneButtonTiny btn_minus (MINUS_BTN_PIN);
-OneButtonTiny btn_menu (MENU_BTN_PIN);
+OneButtonTiny btn_plus(PLUS_BTN_PIN);
+OneButtonTiny btn_minus(MINUS_BTN_PIN);
+OneButtonTiny btn_menu(MENU_BTN_PIN);
 
-void btnSetup ();
-void btnPlusOneClick ();
-void btnPlusLongPress ();
-void btnMinusOneClick ();
-void btnMinusLongPress ();
-void btnMenuOnClick ();
-void btnMenuLongPress ();
-void btnTick ();
+void btnSetup();
+void btnPlusOneClick();
+void btnPlusLongPress();
+void btnMinusOneClick();
+void btnMinusLongPress();
+void btnMenuOnClick();
+void btnMenuLongPress();
+void btnTick();
 
 #ifdef ENABLE_BURNER
-void burnerSystem ();
+void burnerSystem();
 #endif
-void ui ();
-void sensorSetup ();
+void ui();
+void sensorSetup();
 #if LED_BUILD_STATUS
-void ledSetup ();
+void ledSetup();
 #endif
 #ifdef LED_DEBUG
-void
-ledDebug ()
-{
-  digitalWrite (BURNER_PIN, HIGH);
-  digitalWrite (ERROR_PIN, LOW);
-  delay (200);
-  digitalWrite (BURNER_PIN, LOW);
-  digitalWrite (ERROR_PIN, HIGH);
+void ledDebug() {
+  digitalWrite(BURNER_PIN, HIGH);
+  digitalWrite(ERROR_PIN, LOW);
+  delay(200);
+  digitalWrite(BURNER_PIN, LOW);
+  digitalWrite(ERROR_PIN, HIGH);
 }
 #endif
 
-void
-setup ()
-{
-  Serial.begin (9600);
-  u8g2.begin ();
+void setup() {
+  Serial.begin(9600);
+  u8g2.begin();
 
-  sensorSetup ();
-  btnSetup ();
+  sensorSetup();
+  btnSetup();
 #if LED_BUILD_STATUS
-  ledSetup ();
+  ledSetup();
 #endif
 }
 
-void
-loop ()
-{
-  btnTick ();
+void loop() {
+  btnTick();
 #ifdef LED_DEBUG
-  ledDebug ();
+  ledDebug();
 #endif
-  constrSensor (&s_main, MAIN_SENSOR_PIN);
-  constrSensor (&s_first, FIRST_RESERVE_SENSOR_PIN);
-  constrSensor (&s_second, SECOND_RESERVE_SENSOR_PIN);
-  constrSensor (&s_street, STREET_SENSOR_PIN);
+  constrSensor(&s_main, MAIN_SENSOR_PIN);
+  constrSensor(&s_first, FIRST_RESERVE_SENSOR_PIN);
+  constrSensor(&s_second, SECOND_RESERVE_SENSOR_PIN);
+  constrSensor(&s_street, STREET_SENSOR_PIN);
 #ifdef DEBUG
-  Serial.println ("=====DEBUG INPUT====");
+  Serial.println("=====DEBUG INPUT====");
   // acp
-  PRINT_DEBUG ("[ACP] s_main: ", s_main.acp);
-  PRINT_DEBUG ("[ACP] s_first: ", s_first.acp);
-  PRINT_DEBUG ("[ACP] s_second: ", s_second.acp);
-  PRINT_DEBUG ("[ACP] s_street: ", s_street.acp);
+  PRINT_DEBUG("[ACP] s_main: ", s_main.acp);
+  PRINT_DEBUG("[ACP] s_first: ", s_first.acp);
+  PRINT_DEBUG("[ACP] s_second: ", s_second.acp);
+  PRINT_DEBUG("[ACP] s_street: ", s_street.acp);
 
   // temperature
-  PRINT_DEBUG ("[TEMP] s_main: ", s_main.temp);
-  PRINT_DEBUG ("[TEMP] s_first: ", s_first.temp);
-  PRINT_DEBUG ("[TEMP] s_second: ", s_second.temp);
-  PRINT_DEBUG ("[TEMP] s_street: ", s_street.temp);
+  PRINT_DEBUG("[TEMP] s_main: ", s_main.temp);
+  PRINT_DEBUG("[TEMP] s_first: ", s_first.temp);
+  PRINT_DEBUG("[TEMP] s_second: ", s_second.temp);
+  PRINT_DEBUG("[TEMP] s_street: ", s_street.temp);
 
   // correct integer
-  PRINT_DEBUG ("[CORRECT INTEGER] s_main: ", s_main.correctInt);
-  PRINT_DEBUG ("[CORRECT INTEGER] s_first: ", s_first.correctInt);
-  PRINT_DEBUG ("[CORRECT INTEGER] s_second: ", s_second.correctInt);
-  PRINT_DEBUG ("[CORRECT INTEGER] s_street: ", s_street.correctInt);
+  PRINT_DEBUG("[CORRECT INTEGER] s_main: ", s_main.correctInt);
+  PRINT_DEBUG("[CORRECT INTEGER] s_first: ", s_first.correctInt);
+  PRINT_DEBUG("[CORRECT INTEGER] s_second: ", s_second.correctInt);
+  PRINT_DEBUG("[CORRECT INTEGER] s_street: ", s_street.correctInt);
 
 // other variables
 #ifdef ENABLE_BURNER
-  PRINT_DEBUG ("[SETTINGS_H] burnerStatus: ", burnerStatus);
+  PRINT_DEBUG("[SETTINGS_H] burnerStatus: ", burnerStatus);
 #endif
-  PRINT_DEBUG ("[SETTINGS_H] minPermOffset: ", minPermOffset);
-  PRINT_DEBUG ("[SETTINGS_H] maxPermOffset: ", maxPermOffset);
-  PRINT_DEBUG ("[SETTINGS_H] Hysteresis: ", hyst);
-  PRINT_DEBUG ("[MENU_UI_H] isValueOpen: ", isValueOpen);
-  PRINT_DEBUG ("[MENU_UI_H] _selected: ", _selected);
-  PRINT_DEBUG ("[PAGE_H] currentPage: ", currentPage);
+  PRINT_DEBUG("[SETTINGS_H] minPermOffset: ", minPermOffset);
+  PRINT_DEBUG("[SETTINGS_H] maxPermOffset: ", maxPermOffset);
+  PRINT_DEBUG("[SETTINGS_H] Hysteresis: ", hyst);
+  PRINT_DEBUG("[MENU_UI_H] isValueOpen: ", isValueOpen);
+  PRINT_DEBUG("[MENU_UI_H] _selected: ", _selected);
+  PRINT_DEBUG("[PAGE_H] currentPage: ", currentPage);
 #ifdef ENABLE_VALIDATE
-  PRINT_DEBUG ("[ERROR_H] errorCode: ", errorCode);
+  PRINT_DEBUG("[ERROR_H] errorCode: ", errorCode);
 #endif
 
 #endif
 #ifdef ENABLE_COMMANDS
-  handleCommand ();
+  handleCommand();
 #endif
-  ui ();
+  ui();
 
 #ifdef ENABLE_VALIDATE
   // validate
-  validatePipeline (&sensors);
-  if (errorCode > 0)
-    haltSystem ();
+  validatePipeline(&sensors);
+  if (errorCode > 0) haltSystem();
 #endif
 
 #ifdef ENABLE_BURNER
-  burnerSystem ();
+  burnerSystem();
 #endif
 }
 
-void
-sensorSetup ()
-{
-  pinMode (MAIN_SENSOR_PIN, INPUT);
-  pinMode (FIRST_RESERVE_SENSOR_PIN, INPUT);
-  pinMode (SECOND_RESERVE_SENSOR_PIN, INPUT);
-  pinMode (STREET_SENSOR_PIN, INPUT);
+void sensorSetup() {
+  pinMode(MAIN_SENSOR_PIN, INPUT);
+  pinMode(FIRST_RESERVE_SENSOR_PIN, INPUT);
+  pinMode(SECOND_RESERVE_SENSOR_PIN, INPUT);
+  pinMode(STREET_SENSOR_PIN, INPUT);
   sensors._s_main = &s_main;
   sensors._s_first = &s_first;
   sensors._s_second = &s_second;
   sensors._s_street = &s_street;
 }
 
-void
-btnSetup ()
-{
+void btnSetup() {
   const int debounce = 20;
   auto mode = INPUT_PULLUP;
-  pinMode (MENU_BTN_PIN, mode);
-  pinMode (PLUS_BTN_PIN, mode);
-  pinMode (MINUS_BTN_PIN, mode);
+  pinMode(MENU_BTN_PIN, mode);
+  pinMode(PLUS_BTN_PIN, mode);
+  pinMode(MINUS_BTN_PIN, mode);
 
-  btn_menu.setDebounceMs (debounce);
-  btn_plus.setDebounceMs (debounce);
-  btn_minus.setDebounceMs (debounce);
+  btn_menu.setDebounceMs(debounce);
+  btn_plus.setDebounceMs(debounce);
+  btn_minus.setDebounceMs(debounce);
 
   // btn_menu.attachClick (btnMenuOnClick);
-  btn_menu.attachLongPressStart (btnMenuLongPress);
-  btn_plus.attachClick (btnPlusOneClick);
-  btn_plus.attachLongPressStart (btnPlusLongPress);
-  btn_minus.attachClick (btnMinusOneClick);
-  btn_minus.attachLongPressStart (btnMinusLongPress);
+  btn_menu.attachLongPressStart(btnMenuLongPress);
+  btn_plus.attachClick(btnPlusOneClick);
+  btn_plus.attachLongPressStart(btnPlusLongPress);
+  btn_minus.attachClick(btnMinusOneClick);
+  btn_minus.attachLongPressStart(btnMinusLongPress);
 }
 
 #if LED_BUILD_STATUS
-void
-ledSetup ()
-{
+void ledSetup() {
 #ifdef ENABLE_BURNER
   // burner
-  pinMode (BURNER_PIN, OUTPUT);
+  pinMode(BURNER_PIN, OUTPUT);
 #endif
 
 #ifdef ENABLE_VALIDATE
   // error
-  pinMode (ERROR_PIN, OUTPUT);
+  pinMode(ERROR_PIN, OUTPUT);
 #endif
 }
 #endif
 
-void
-btnMenuOnClick ()
-{
+void btnMenuOnClick() {
   currentPage = currentPage == MAIN ? SETTINGS : MAIN;
   isValueOpen = false;
 }
 
-void
-btnMenuLongPress ()
-{
-  btnMenuOnClick ();
+void btnMenuLongPress() { btnMenuOnClick(); }
+void btnTick() {
+  btn_menu.tick();
+  btn_plus.tick();
+  btn_minus.tick();
 }
-void
-btnTick ()
-{
-  btn_menu.tick ();
-  btn_plus.tick ();
-  btn_minus.tick ();
-}
-void
-btnPlusLongPress ()
-{
-  if (currentPage == SETTINGS)
-    isValueOpen = 1;
+void btnPlusLongPress() {
+  if (currentPage == SETTINGS) isValueOpen = 1;
 }
 
-void
-btnPlusOneClick ()
-{
-  if (currentPage == SETTINGS && !isValueOpen)
-    {
-      menuSelectPrev ();
+void btnPlusOneClick() {
+  if (currentPage == SETTINGS && !isValueOpen) {
+    menuSelectPrev();
 #ifdef DEBUG
-      Serial.println ("goToUp");
+    Serial.println("goToUp");
 #endif
-    }
-  else if (currentPage == SETTINGS && isValueOpen)
-    {
-      menuPageIncreaseValue ();
-    }
+  } else if (currentPage == SETTINGS && isValueOpen) {
+    menuPageIncreaseValue();
+  }
 }
 
-void
-btnMinusOneClick ()
-{
-  if (currentPage == SETTINGS && !isValueOpen)
-    {
-      menuSelectNext ();
+void btnMinusOneClick() {
+  if (currentPage == SETTINGS && !isValueOpen) {
+    menuSelectNext();
 #ifdef DEBUG
-      Serial.println ("goToDown");
+    Serial.println("goToDown");
 #endif
-    }
-  else if (currentPage == SETTINGS && isValueOpen)
-    {
-      menuPageDecreaseValue ();
-    }
+  } else if (currentPage == SETTINGS && isValueOpen) {
+    menuPageDecreaseValue();
+  }
 }
 
-void
-btnMinusLongPress ()
-{
-  if (currentPage == SETTINGS)
-    isValueOpen = 0;
+void btnMinusLongPress() {
+  if (currentPage == SETTINGS) isValueOpen = 0;
 }
 
 #ifdef ENABLE_COMMANDS
 
-void
-handleCommand ()
-{
-  if (Serial.available () > 0)
-    {
-      char *c_str = static_cast<char *> (malloc (getCmdBufSize ()));
-      if (c_str == nullptr)
-        return;
-      Serial.readString ().toCharArray (c_str, getCmdBufSize ());
-      readCommandAndImpl (c_str, &sensors);
-    }
+void handleCommand() {
+  if (Serial.available() > 0) {
+    char *c_str = static_cast<char *>(malloc(getCmdBufSize()));
+    if (c_str == nullptr) return;
+    Serial.readString().toCharArray(c_str, getCmdBufSize());
+    readCommandAndImpl(c_str, &sensors);
+  }
 }
 
 #endif
 
-void
-ui ()
-{
-  u8g2.firstPage ();
-  do
-    {
-      u8g2.setFont (u8g2_font_ncenB08_tr);
-      switch (currentPage)
-        {
-        case MAIN:
-          mainPage (&u8g2, &sensors);
-          break;
-        case SETTINGS:
-          menuPage (&u8g2, &sensors);
-          break;
+void ui() {
+  u8g2.firstPage();
+  do {
+    u8g2.setFont(u8g2_font_ncenB08_tr);
+    switch (currentPage) {
+      case MAIN:
+        mainPage(&u8g2, &sensors);
+        break;
+      case SETTINGS:
+        menuPage(&u8g2, &sensors);
+        break;
 
 #ifdef ENABLE_VALIDATE
-        case ERROR:
-          errorPage (&u8g2, errorCode);
-          break;
+      case ERROR:
+        errorPage(&u8g2, errorCode);
+        break;
 #endif
-        }
     }
-  while (u8g2.nextPage ());
+  } while (u8g2.nextPage());
 }
 
 #ifdef ENABLE_VALIDATE
-void
-haltSystem ()
-{
-  if (!systemHalted)
-    {
-      Serial.println ("ERROR");
-      digitalWrite (BURNER_PIN, LOW);
-      digitalWrite (ERROR_PIN, HIGH);
-      burnerStatus = 0;
-    }
+void haltSystem() {
+  if (!systemHalted) {
+    Serial.println("ERROR");
+    digitalWrite(BURNER_PIN, LOW);
+    digitalWrite(ERROR_PIN, HIGH);
+    burnerStatus = 0;
+  }
   systemHalted = 1;
   currentPage = ERROR;
 }
 #endif
 
 #ifdef ENABLE_BURNER
-void
-burnerSystem ()
-{
-  if (checkTempForBurner (&sensors))
-    {
-      digitalWrite (BURNER_PIN, HIGH);
-    }
-  else
-    {
-      digitalWrite (BURNER_PIN, LOW);
-    }
+void burnerSystem() {
+  if (checkTempForBurner(&sensors)) {
+    digitalWrite(BURNER_PIN, HIGH);
+  } else {
+    digitalWrite(BURNER_PIN, LOW);
+  }
 }
 #endif

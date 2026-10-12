@@ -1,4 +1,5 @@
 #include "validate.hpp"
+
 #include "helper.hpp"
 #include "sensor.hpp"
 #include "settings.hpp"
@@ -6,9 +7,7 @@
 
 int errorCode = 0;
 
-int
-checkSensors (Sensors *sn)
-{
+int checkSensors(Sensors *sn) {
   /*
   codes:
   100 - all sensors agree
@@ -17,53 +16,43 @@ checkSensors (Sensors *sn)
   103 - second reserve sensor is defective
 
   */
-  if (sn->_s_first->temp + PERMITTED_TEMP_DIFFERENCE <= sn->_s_main->temp
-      || sn->_s_second->temp + PERMITTED_TEMP_DIFFERENCE <= sn->_s_main->temp)
-    {
-      return 101;
-    }
-  if (sn->_s_main->temp + PERMITTED_TEMP_DIFFERENCE <= sn->_s_first->temp
-      || sn->_s_second->temp + PERMITTED_TEMP_DIFFERENCE <= sn->_s_first->temp)
-    {
-      return 102;
-    }
-  if (sn->_s_main->temp + PERMITTED_TEMP_DIFFERENCE <= sn->_s_second->temp
-      || sn->_s_first->temp + PERMITTED_TEMP_DIFFERENCE <= sn->_s_second->temp)
-    {
-      return 103;
-    }
+  if (sn->_s_first->temp + PERMITTED_TEMP_DIFFERENCE <= sn->_s_main->temp ||
+      sn->_s_second->temp + PERMITTED_TEMP_DIFFERENCE <= sn->_s_main->temp) {
+    return 101;
+  }
+  if (sn->_s_main->temp + PERMITTED_TEMP_DIFFERENCE <= sn->_s_first->temp ||
+      sn->_s_second->temp + PERMITTED_TEMP_DIFFERENCE <= sn->_s_first->temp) {
+    return 102;
+  }
+  if (sn->_s_main->temp + PERMITTED_TEMP_DIFFERENCE <= sn->_s_second->temp ||
+      sn->_s_first->temp + PERMITTED_TEMP_DIFFERENCE <= sn->_s_second->temp) {
+    return 103;
+  }
 
-  return 0; // no error
+  return 0;  // no error
 }
 
-int
-checkTemperature (Sensors *sn)
-{
-
-  float averageVal = getFAverageTemp (sn);
+int checkTemperature(Sensors *sn) {
+  float averageVal = getFAverageTemp(sn);
 
   // the bounds themselves are valid readings, so compare strictly
-  if (maxPermOffset < averageVal)
-    {
-      return 201; // average too hot
-    }
-  if (minPermOffset > averageVal)
-    {
-      return 202; // average too cold
-    }
+  if (maxPermOffset < averageVal) {
+    return 201;  // average too hot
+  }
+  if (minPermOffset > averageVal) {
+    return 202;  // average too cold
+  }
 
-  return 0; // no error
+  return 0;  // no error
 }
-void
-validatePipeline (Sensors *sn)
-{
+void validatePipeline(Sensors *sn) {
   // until every sensor has finished its first ATTEMPTS cycle its temp is 0,
   // which would be reported as "too cold"
   if (!sn->_s_main->ready || !sn->_s_first->ready || !sn->_s_second->ready)
     return;
 
-  int sensor_code = checkSensors (sn);
-  int temperature_code = checkTemperature (sn);
+  int sensor_code = checkSensors(sn);
+  int temperature_code = checkTemperature(sn);
 
   if (sensor_code > 0)
     errorCode = sensor_code;

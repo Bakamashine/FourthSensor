@@ -1,131 +1,146 @@
 #include "sensor.hpp"
-#include "constants/ntcPoint.hpp"
-#include "helper.hpp"
-#include "settings.hpp"
+
 #include <Arduino.h>
 
+#include "MedianFilter.h"
+#include "constants/ntcPoint.hpp"
+#include "constants/settings.hpp"
+#include "helper.hpp"
+#include "macro/debugUi.hpp"
+#include "settings.hpp"
+
 #define MAX_ACP 1023
-#define RESISTOR_FROM_SENSOR 2000 // 2kOm
+#define RESISTOR_FROM_SENSOR 2000  // 2kOm
 
-#define GET_RES(value)                                                        \
-  (RESISTOR_FROM_SENSOR * static_cast<float> (value) / (MAX_ACP - value))
-#define TEMP_INTERVAL 0 // ms between samples
+#define GET_RES(value) \
+  (RESISTOR_FROM_SENSOR * static_cast<float>(value) / (MAX_ACP - value))
+#define TEMP_INTERVAL 0  // ms between samples
 
-#define PERM_DIF 50
+#define PERM_DIF 150
 
-float getTempFromTable (Sensor *);
+float getTempFromTable(Sensor *);
 
-int16_t
-ntcTempAt (size_t i)
-{
-
-  return static_cast<int16_t> (pgm_read_word (&ntcTable[i].temp_c));
+int16_t ntcTempAt(size_t i) {
+  return static_cast<int16_t>(pgm_read_word(&ntcTable[i].temp_c));
 }
-int32_t
-ntcResAt (size_t i)
-{
-  return static_cast<int32_t> (pgm_read_dword (&ntcTable[i].resistance));
+int32_t ntcResAt(size_t i) {
+  return static_cast<int32_t>(pgm_read_dword(&ntcTable[i].resistance));
 }
 
-float
-getTemp (Sensor *sensor)
-{
+float getTemp(Sensor *sensor) {
   // round to the nearest whole ADC count before the table lookup: the filter
   // output is fractional, and the table is indexed by an integer count
-  sensor->samples[sensor->sampleIdx] = getTempFromTable (sensor);
+  sensor->samples[sensor->sampleIdx] = getTempFromTable(sensor);
   sensor->sampleIdx++;
 
-  if (sensor->sampleIdx >= ATTEMPTS)
-    {
-      sort (sensor->samples, ATTEMPTS);
-      float average = FloatGetAverageValue (&sensor->samples[1], ATTEMPTS - 2);
+  if (sensor->sampleIdx >= ATTEMPTS) {
+    sort(sensor->samples, ATTEMPTS);
+    float average = FloatGetAverageValue(&sensor->samples[1], ATTEMPTS - 2);
 
-      if (!sensor->ready || average - sensor->lastTemp > hyst
-          || sensor->lastTemp - average > hyst)
-        sensor->lastTemp = average;
+    if (!sensor->ready || average - sensor->lastTemp > hyst ||
+        sensor->lastTemp - average > hyst)
+      sensor->lastTemp = average;
 
-      sensor->sampleIdx = 0;
-      sensor->ready = true;
-    }
+    sensor->sampleIdx = 0;
+    sensor->ready = true;
+  }
 
-  return sensor->lastTemp + static_cast<float> (sensor->correctInt);
+  return sensor->lastTemp + static_cast<float>(sensor->correctInt);
 }
 
-float
-getTempFromTable (Sensor *sensor)
-{
+float getTempFromTable(Sensor *sensor) {
   int acp = sensor->acp;
-  if (acp >= MAX_ACP)
-    acp = MAX_ACP - 1;
-  if (acp <= 0)
-    acp = 1;
+  if (acp >= MAX_ACP) acp = MAX_ACP - 1;
+  if (acp <= 0) acp = 1;
 
-  sensor->resist = GET_RES (acp);
+  sensor->resist = GET_RES(acp);
 
   // get max or min value
-  if (sensor->resist >= ntcResAt (0))
-    return static_cast<float> (ntcTempAt (0));
-  if (sensor->resist <= ntcResAt (NTC_TABLE_SIZE - 1))
-    return static_cast<float> (ntcTempAt (NTC_TABLE_SIZE - 1));
+  if (sensor->resist >= ntcResAt(0)) return static_cast<float>(ntcTempAt(0));
+  if (sensor->resist <= ntcResAt(NTC_TABLE_SIZE - 1))
+    return static_cast<float>(ntcTempAt(NTC_TABLE_SIZE - 1));
 
-  for (size_t i = 0; i + 1 < NTC_TABLE_SIZE; i++)
-    {
-      int16_t temp = ntcTempAt (i);
-      int32_t res = ntcResAt (i);
+  for (size_t i = 0; i + 1 < NTC_TABLE_SIZE; i++) {
+    int16_t temp = ntcTempAt(i);
+    int32_t res = ntcResAt(i);
 
-      if (sensor->resist > res)
-        continue;
-      if (sensor->resist < ntcResAt (i + 1))
-        continue;
+    if (sensor->resist > res) continue;
+    if (sensor->resist < ntcResAt(i + 1)) continue;
 
-      // interpolate between the two bracketing table rows
-      float fraction = static_cast<float> (res - sensor->resist)
-                       / (res - ntcResAt (i + 1));
-      return static_cast<float> (temp)
-             + fraction * static_cast<float> (ntcTempAt (i + 1) - temp);
-    }
+    // interpolate between the two bracketing table rows
+    float fraction =
+        static_cast<float>(res - sensor->resist) / (res - ntcResAt(i + 1));
+    return static_cast<float>(temp) +
+           fraction * static_cast<float>(ntcTempAt(i + 1) - temp);
+  }
   return 0.0F;
 }
 
-void
-constrSensor (Sensor *sensor, uint8_t pin)
-{
-  uint32_t now = millis ();
-  if (now - sensor->lastSampleMs < TEMP_INTERVAL)
-    {
+void constrSensor(Sensor *sensor, uint8_t pin) {
+  uint32_t now = millis();
+  if (now - sensor->lastSampleMs < TEMP_INTERVAL) {
+    return;
+  }
 
-      return;
-    }
-
-  int acp = analogRead (pin);
+  int acp = analogRead(pin);
   sensor->lastSampleMs = now;
 
-  bool spike = sensor->lastAcp >= 0
-               && (acp - sensor->lastAcp > PERM_DIF
-                   || sensor->lastAcp - acp > PERM_DIF);
-  sensor->acp = sensor->ema.filter (acp);
-  if (spike)
-    return;
-  sensor->temp = getTemp (sensor);
+  bool spike = sensor->lastAcp >= 0 && (acp - sensor->lastAcp > PERM_DIF ||
+                                        sensor->lastAcp - acp > PERM_DIF);
+#if defined(EMA_FILTER) && defined(MEDIAN_FILTER)
+  auto ema_filtered_acp = sensor->ema.filter(acp);
+#ifdef DEBUG
+  PRINT_DEBUG("ema_filtered_acp: ", ema_filtered_acp);
+#endif
+
+  sensor->median.numNodes = WINDOW_SIZE;
+  sensor->median.medianBuffer = sensor->medianBuffer;
+  MEDIANFILTER_Init(&sensor->median);
+
+  uint16_t init_val = acp;
+  for (uint8_t i = 0; i < WINDOW_SIZE; i++)
+    MEDIANFILTER_Insert(&sensor->median, init_val);
+
+  for (int i = 0; i < (1 << EMA_K); i++) sensor->ema.filter(init_val);
+
+  sensor->lastAcp = acp;
+
+  uint16_t med = MEDIANFILTER_Insert(&sensor->median, acp);
+  sensor->acp = sensor->ema.filter(med);
+
+#elif defined(EMA_FILTER)
+  sensor->acp = sensor->ema.filter(acp);
+#elif defined(MEDIAN_FILTER)
+  // the filter state has to survive between samples, so it lives in Sensor and
+  // is initialised once, on the first call
+  if (sensor->median.numNodes == 0) {
+    sensor->median.numNodes = WINDOW_SIZE;
+    sensor->median.medianBuffer = sensor->medianBuffer;
+    MEDIANFILTER_Init(&sensor->median);
+    // Init zero-fills the window, which would drag the median down during
+    // warm-up: prime every node with the first real sample instead
+    for (uint8_t i = 0; i < WINDOW_SIZE; i++)
+      MEDIANFILTER_Insert(&sensor->median, acp);
+  }
+  sensor->acp = MEDIANFILTER_Insert(&sensor->median, acp);
+#else
+  sensor->acp = acp;
+#endif
+  if (spike) return;
+  sensor->temp = getTemp(sensor);
 }
 
-int
-getIAverageTemp (Sensors *sn)
-{
-  int temp[] = { static_cast<int> (sn->_s_main->temp),
-                 static_cast<int> (sn->_s_first->temp),
-                 static_cast<int> (sn->_s_second->temp) };
-  float averageVal
-      = IntegerGetAverageValue (temp, sizeof (temp) / sizeof (temp[0]));
-  return static_cast<int> (averageVal);
+int getIAverageTemp(Sensors *sn) {
+  int temp[] = {static_cast<int>(sn->_s_main->temp),
+                static_cast<int>(sn->_s_first->temp),
+                static_cast<int>(sn->_s_second->temp)};
+  float averageVal =
+      IntegerGetAverageValue(temp, sizeof(temp) / sizeof(temp[0]));
+  return static_cast<int>(averageVal);
 }
 
-float
-getFAverageTemp (Sensors *sn)
-{
-  float temp[]
-      = { sn->_s_main->temp, sn->_s_first->temp, sn->_s_second->temp };
-  float averageVal
-      = FloatGetAverageValue (temp, sizeof (temp) / sizeof (temp[0]));
+float getFAverageTemp(Sensors *sn) {
+  float temp[] = {sn->_s_main->temp, sn->_s_first->temp, sn->_s_second->temp};
+  float averageVal = FloatGetAverageValue(temp, sizeof(temp) / sizeof(temp[0]));
   return averageVal;
 }
