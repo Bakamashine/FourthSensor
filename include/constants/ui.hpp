@@ -29,6 +29,12 @@
 
 #define ROWS 5
 
+/// main page geometry: with the smaller FONT the header, the four NTC sensors
+/// and the optional DS18 row all fit into the 64 px height
+#define U8G2_MAIN_MARGIN_Y 7
+#define U8G2_MAIN_ROW_STEP 10
+#define U8G2_MAIN_ROW(n) (U8G2_MAIN_MARGIN_Y + (n) * U8G2_MAIN_ROW_STEP)
+
 /// menu selection marker column, left of the first table column
 #define U8G2_MENU_MARKER_X 0
 

@@ -9,30 +9,39 @@
 
 namespace UI {
 void mainPage(U8G2 *display, Sensors *sensors) {
+  display->setFont(FONT);
+
   // columns
-  RAW_WRITE_ROW(U8G2_FIRST_ROW, nullptr, PREVIEW_ACP_TEXT, PREVIEW_COLUMN_TEMP,
-                display);
+  RAW_WRITE_ROW(U8G2_MAIN_ROW(0), nullptr, PREVIEW_ACP_TEXT,
+                PREVIEW_COLUMN_TEMP, display);
   // rows
 
   // main sensor
   if (sensors->_s_first->temp)
-    N_AT_WRITE_ROW(U8G2_SECOND_ROW, PREVIEW_TEMP, sensors->_s_first->temp,
+    N_AT_WRITE_ROW(U8G2_MAIN_ROW(1), PREVIEW_TEMP, sensors->_s_first->temp,
                    sensors->_s_first->acp, display);
 
   // first reserve sensor
   if (sensors->_s_second->temp)
-    N_AT_WRITE_ROW(U8G2_THIRD_ROW, PREVIEW_FIRST_RESERVE,
+    N_AT_WRITE_ROW(U8G2_MAIN_ROW(2), PREVIEW_FIRST_RESERVE,
                    sensors->_s_second->temp, sensors->_s_second->acp, display);
 
   // second reserve sensor
   if (sensors->_s_third->temp)
-    N_AT_WRITE_ROW(U8G2_FOURTH_ROW, PREVIEW_SECOND_RESERVE,
+    N_AT_WRITE_ROW(U8G2_MAIN_ROW(3), PREVIEW_SECOND_RESERVE,
                    sensors->_s_third->temp, sensors->_s_third->acp, display);
 
   // street sensor
   if (sensors->_s_fourth->temp)
-    N_AT_WRITE_ROW(U8G2_FIFTH_ROW, PREVIEW_STREET, sensors->_s_fourth->temp,
+    N_AT_WRITE_ROW(U8G2_MAIN_ROW(4), PREVIEW_STREET, sensors->_s_fourth->temp,
                    sensors->_s_fourth->acp, display);
+
+#ifdef DS18_SENSOR
+  // DS18 sensor: temperature only, so it goes into the temperature column
+  char ds18Buf[10];
+  setFloatText(ds18Buf, sizeof(ds18Buf), Sens::ds18Temp);
+  RAW_WRITE_ROW(U8G2_MAIN_ROW(5), PREVIEW_DS18, nullptr, ds18Buf, display);
+#endif
 }
 
 void draw() {

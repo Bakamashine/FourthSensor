@@ -1,11 +1,14 @@
 #pragma once
 #include "constants/ntcPoint.hpp"
+#include "constants/pin.hpp"
 #include "constants/settings.hpp"
-
 #ifdef EMA_FILTER
 #include "ema.hpp"
-#define EMA_K 2  ///< alpha = 1 / 2^EMA_K
 #endif
+#ifdef DS18_SENSOR
+#include <GyverDS18.h>
+#endif
+
 #ifdef MEDIAN_FILTER
 #include "MedianFilter.h"
 #define WINDOW_SIZE 5  ///< sliding window length, must be odd and > 1
@@ -31,7 +34,7 @@ struct Sensor {
   bool filterReady = false;  ///< true once the acp filters were primed
 #endif
 #ifdef EMA_FILTER
-  EMA<EMA_K, uint32_t> ema;  ///< integer EMA over the raw ADC
+  EMA<uint32_t> ema;  ///< integer EMA over the raw ADC
 #endif
 #ifdef MEDIAN_FILTER
   MedianFilter_t median;  ///< sliding window median over the raw ADC
@@ -52,6 +55,7 @@ void sensorFilterInit(Sensor *sensor, uint8_t pin);
 
 void sensorsLoop();
 void sensorSetup();
+void DS18Setup();
 
 int16_t ntcTempAt(size_t i);
 int32_t ntcResAt(size_t i);
@@ -59,11 +63,20 @@ int32_t ntcResAt(size_t i);
 int getIAverageTemp(Sensors *sens);
 float getFAverageTemp(Sensors *sens);
 
+#ifdef DS18_SENSOR
+float readFromDS18();
+#endif
+
 namespace Sens {
 inline Sensor first;
 inline Sensor second;
 inline Sensor third;
 inline Sensor fourth;
+
+#ifdef DS18_SENSOR
+inline GyverDS18Single ds(DS18_PIN);
+inline float ds18Temp = 0.0F;
+#endif
 
 inline Sensors all{&first, &second, &third, &fourth};
 }  // namespace Sens

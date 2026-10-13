@@ -1,6 +1,7 @@
 #include "sensor.hpp"
 
 #include <Arduino.h>
+#include <GyverDS18Single.h>
 
 #include "constants/ntcPoint.hpp"
 #include "constants/pin.hpp"
@@ -20,6 +21,13 @@
 #define SPIKE_LIMIT 3
 
 float getTempFromTable(Sensor *);
+
+static void changeEmaK() {
+  Sens::first.ema.setK(2);
+  Sens::second.ema.setK(4);
+  Sens::third.ema.setK(6);
+  Sens::fourth.ema.setK(7);
+}
 
 int16_t ntcTempAt(size_t i) {
   return static_cast<int16_t>(pgm_read_word(&ntcTable[i].temp_c));
@@ -167,4 +175,20 @@ void sensorSetup() {
   sensorFilterInit(&Sens::second, SECOND_RESERVE_SENSOR_PIN);
   sensorFilterInit(&Sens::third, THIRD_RESERVE_SENSOR_PIN);
   sensorFilterInit(&Sens::fourth, FOURTH_SENSOR_PIN);
+#ifdef DS18_SENSOR
+  DS18Setup();
+#endif
+  // changeEmaK();
 }
+
+#ifdef DS18_SENSOR
+void DS18Setup() { pinMode(DS18_PIN, INPUT); }
+
+float readFromDS18() {
+  if (!Sens::ds.tick()) {
+    Sens::ds18Temp = Sens::ds.getTemp();
+  }
+  return Sens::ds18Temp;
+}
+
+#endif

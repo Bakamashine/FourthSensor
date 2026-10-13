@@ -1,8 +1,7 @@
-/* ✔ */
-
 #pragma once
 
 #include <stdint.h>
+#define EMA_K 4  ///< alpha = 1 / 2^EMA_K
 
 /**
  * @brief   A class for single-pole infinite impulse response filters
@@ -35,7 +34,7 @@
  *
  * @ingroup    Utilities
  */
-template <uint8_t K, class uint_t>
+template <class uint_t>
 class EMA {
  public:
   /**
@@ -51,6 +50,8 @@ class EMA {
     filtered -= output;
     return output;
   }
+
+  void setK(uint8_t k) { K = k; }
 
   /**
    * @brief   Filter the input: Given @f$ x[n] @f$, calculate @f$ y[n] @f$.
@@ -68,5 +69,6 @@ class EMA {
 
  private:
   uint_t filtered = 0;
-  constexpr static uint_t fixedPointAHalf = 1 << (K - 1);
+  uint8_t K = EMA_K;
+  uint_t fixedPointAHalf = 1 << (K - 1);
 };

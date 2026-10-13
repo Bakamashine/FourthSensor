@@ -13,7 +13,9 @@
 #define MEDIAN_FILTER
 #define EMA_FILTER
 
+#define DS18_SENSOR
+
 // debug
-// #define DEBUG
+#define DEBUG
 // #define LED_DEBUG
 // #define DEBUG_COMMAND

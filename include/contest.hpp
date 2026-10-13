@@ -7,6 +7,7 @@
 #define PREVIEW_FIRST_RESERVE "Two:"
 #define PREVIEW_SECOND_RESERVE "Three:"
 #define PREVIEW_STREET "Four:"
+#define PREVIEW_DS18 "DS18:"
 
 // menu
 #define PREVIEW_MENU "Menu"

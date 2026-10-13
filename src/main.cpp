@@ -40,6 +40,10 @@ void loop() {
 #endif
   sensorsLoop();
 
+#ifdef DS18_SENSOR
+  auto ds18Temp = readFromDS18();
+#endif
+
 #ifdef DEBUG
   Serial.println("=====DEBUG INPUT====");
   // acp
@@ -53,6 +57,9 @@ void loop() {
   PRINT_DEBUG("[TEMP] s_second: ", Sens::second.temp);
   PRINT_DEBUG("[TEMP] s_third: ", Sens::third.temp);
   PRINT_DEBUG("[TEMP] s_fourth: ", Sens::fourth.temp);
+#ifdef DS18_SENSOR
+  PRINT_DEBUG("[TEMP] DS18: ", ds18Temp);
+#endif
 
   // correct integer
   PRINT_DEBUG("[CORRECT INTEGER] s_first: ", Sens::first.correctInt);
