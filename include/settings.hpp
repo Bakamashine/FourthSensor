@@ -2,12 +2,12 @@
 #include "constants/settings.hpp"
 #include "sensor.hpp"
 
-extern int minPermOffset;
-extern int maxPermOffset;
-extern float hyst;
+inline int minPermOffset = 10;
+inline int maxPermOffset = 50;
+inline float hyst = DEFAULT_HYSTERESIS;
 #ifdef ENABLE_BURNER
-extern bool burnerStatus;
+inline bool burnerStatus = false;
 #endif
-extern int uTemp;
+inline int uTemp = 40;
 
 bool checkTempForBurner(Sensors *);

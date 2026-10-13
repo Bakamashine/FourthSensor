@@ -10,9 +10,8 @@
 // #define ENABLE_VALIDATE
 // #define ENABLE_BURNER
 
-// acp filter
-#define EMA_FILTER
 #define MEDIAN_FILTER
+#define EMA_FILTER
 
 // debug
 // #define DEBUG

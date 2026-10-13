@@ -9,5 +9,5 @@ void menuPageIncreaseValue();
 void menuPageDecreaseValue();
 void menuSelectNext();
 void menuSelectPrev();
-extern bool isValueOpen;
-extern int _selected;
+inline bool isValueOpen = false;
+inline int _selected = 0;

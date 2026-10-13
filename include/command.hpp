@@ -4,3 +4,5 @@
 
 void readCommandAndImpl(char *, Sensors *);
 size_t getCmdBufSize();
+
+void handleCommand();

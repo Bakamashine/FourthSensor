@@ -51,28 +51,28 @@ void runCmd(char *cmd, Sensors *sensors) {
   }
   // sens1=<int> - set the correction added to the main sensor reading
   else if (strcmp(_firstSlice, "sens1") == 0) {
-    sensors->_s_main->correctInt = second_slice_value;
+    sensors->_s_first->correctInt = second_slice_value;
 #ifdef DEBUG_COMMAND
     Serial.println("RUN    sens1 applied");
 #endif
   }
   // sens2=<int> - set the correction for the first reserve sensor
   else if (strcmp(_firstSlice, "sens2") == 0) {
-    sensors->_s_first->correctInt = second_slice_value;
+    sensors->_s_second->correctInt = second_slice_value;
 #ifdef DEBUG_COMMAND
     Serial.println("RUN    sens2 applied");
 #endif
   }
   // sens3=<int> - set the correction for the second reserve sensor
   else if (strcmp(_firstSlice, "sens3") == 0) {
-    sensors->_s_second->correctInt = second_slice_value;
+    sensors->_s_third->correctInt = second_slice_value;
 #ifdef DEBUG_COMMAND
     Serial.println("RUN    sens3 applied");
 #endif
   }
   // sens4=<int> - set the correction for the street sensor
   else if (strcmp(_firstSlice, "sens4") == 0) {
-    sensors->_s_street->correctInt = second_slice_value;
+    sensors->_s_fourth->correctInt = second_slice_value;
 #ifdef DEBUG_COMMAND
     Serial.println("RUN    sens4 applied");
 #endif
@@ -121,4 +121,13 @@ void readCommandAndImpl(char *cmd, Sensors *sensors) {
     Serial.println("Command not found");
 
   free(cmd);
+}
+
+void handleCommand() {
+  if (Serial.available() > 0) {
+    char *c_str = static_cast<char *>(malloc(getCmdBufSize()));
+    if (c_str == nullptr) return;
+    Serial.readString().toCharArray(c_str, getCmdBufSize());
+    readCommandAndImpl(c_str, &Sens::all);
+  }
 }

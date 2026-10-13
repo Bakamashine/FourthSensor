@@ -1,12 +1,14 @@
 #include "validate.hpp"
 
+#include "burner.hpp"
+#include "constants/pin.hpp"
 #include "helper.hpp"
+#include "page.hpp"
 #include "sensor.hpp"
 #include "settings.hpp"
 #define PERMITTED_TEMP_DIFFERENCE 5
 
-int errorCode = 0;
-
+namespace Validate {
 int checkSensors(Sensors *sn) {
   /*
   codes:
@@ -16,16 +18,16 @@ int checkSensors(Sensors *sn) {
   103 - second reserve sensor is defective
 
   */
-  if (sn->_s_first->temp + PERMITTED_TEMP_DIFFERENCE <= sn->_s_main->temp ||
-      sn->_s_second->temp + PERMITTED_TEMP_DIFFERENCE <= sn->_s_main->temp) {
+  if (sn->_s_second->temp + PERMITTED_TEMP_DIFFERENCE <= sn->_s_first->temp ||
+      sn->_s_third->temp + PERMITTED_TEMP_DIFFERENCE <= sn->_s_first->temp) {
     return 101;
   }
-  if (sn->_s_main->temp + PERMITTED_TEMP_DIFFERENCE <= sn->_s_first->temp ||
-      sn->_s_second->temp + PERMITTED_TEMP_DIFFERENCE <= sn->_s_first->temp) {
+  if (sn->_s_first->temp + PERMITTED_TEMP_DIFFERENCE <= sn->_s_second->temp ||
+      sn->_s_third->temp + PERMITTED_TEMP_DIFFERENCE <= sn->_s_second->temp) {
     return 102;
   }
-  if (sn->_s_main->temp + PERMITTED_TEMP_DIFFERENCE <= sn->_s_second->temp ||
-      sn->_s_first->temp + PERMITTED_TEMP_DIFFERENCE <= sn->_s_second->temp) {
+  if (sn->_s_first->temp + PERMITTED_TEMP_DIFFERENCE <= sn->_s_third->temp ||
+      sn->_s_second->temp + PERMITTED_TEMP_DIFFERENCE <= sn->_s_third->temp) {
     return 103;
   }
 
@@ -45,10 +47,10 @@ int checkTemperature(Sensors *sn) {
 
   return 0;  // no error
 }
-void validatePipeline(Sensors *sn) {
+void pipeline(Sensors *sn) {
   // until every sensor has finished its first ATTEMPTS cycle its temp is 0,
   // which would be reported as "too cold"
-  if (!sn->_s_main->ready || !sn->_s_first->ready || !sn->_s_second->ready)
+  if (!sn->_s_first->ready || !sn->_s_second->ready || !sn->_s_third->ready)
     return;
 
   int sensor_code = checkSensors(sn);
@@ -61,3 +63,15 @@ void validatePipeline(Sensors *sn) {
   else
     errorCode = 0;
 }
+
+void haltSystem() {
+  if (!systemHalted) {
+    Serial.println("ERROR");
+    digitalWrite(BURNER_PIN, LOW);
+    digitalWrite(ERROR_PIN, HIGH);
+    Burner::status = 0;
+  }
+  systemHalted = 1;
+  currentPage = ERROR;
+}
+}  // namespace Validate

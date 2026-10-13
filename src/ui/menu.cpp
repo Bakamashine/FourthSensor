@@ -6,9 +6,6 @@
 #include "sensor.hpp"
 #include "settings.hpp"
 
-bool isValueOpen = false;
-int _selected = 0;
-
 /// bounds for the settings that are not sensor corrections
 #define HYST_MIN 0
 #define HYST_MAX 50
@@ -44,7 +41,7 @@ static void buildItems(Sensors *sensors) {
                .markerX = U8G2_MENU_MARKER_X,
                .valueX = U8G2_SECOND_COLUMN,
                .preview = PREVIEW_T1,
-               .value = &sensors->_s_main->correctInt,
+               .value = &sensors->_s_first->correctInt,
                .fvalue = nullptr,
                .step = 0,
                .min = MIN_CORRECT_INT,
@@ -53,7 +50,7 @@ static void buildItems(Sensors *sensors) {
                .markerX = U8G2_MENU_MARKER_X,
                .valueX = U8G2_SECOND_COLUMN,
                .preview = PREVIEW_T2,
-               .value = &sensors->_s_first->correctInt,
+               .value = &sensors->_s_second->correctInt,
                .fvalue = nullptr,
                .step = 0,
                .min = MIN_CORRECT_INT,
@@ -62,7 +59,7 @@ static void buildItems(Sensors *sensors) {
                .markerX = U8G2_MENU_MARKER_X,
                .valueX = U8G2_SECOND_COLUMN,
                .preview = PREVIEW_T3,
-               .value = &sensors->_s_second->correctInt,
+               .value = &sensors->_s_third->correctInt,
                .fvalue = nullptr,
                .step = 0,
                .min = MIN_CORRECT_INT,
@@ -71,7 +68,7 @@ static void buildItems(Sensors *sensors) {
                .markerX = U8G2_MENU_MARKER_X,
                .valueX = U8G2_SECOND_COLUMN,
                .preview = PREVIEW_T4,
-               .value = &sensors->_s_street->correctInt,
+               .value = &sensors->_s_fourth->correctInt,
                .fvalue = nullptr,
                .step = 0,
                .min = MIN_CORRECT_INT,

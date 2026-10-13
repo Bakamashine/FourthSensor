@@ -1,6 +1,11 @@
 #pragma once
 #include "sensor.hpp"
 
-extern int errorCode;
+namespace Validate {
+inline int errorCode = 0;
 
-void validatePipeline(Sensors *);
+void pipeline(Sensors *);
+void haltSystem();
+
+inline bool systemHalted = false;
+}  // namespace Validate

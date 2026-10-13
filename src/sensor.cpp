@@ -2,11 +2,10 @@
 
 #include <Arduino.h>
 
-#include "MedianFilter.h"
 #include "constants/ntcPoint.hpp"
+#include "constants/pin.hpp"
 #include "constants/settings.hpp"
 #include "helper.hpp"
-#include "macro/debugUi.hpp"
 #include "settings.hpp"
 
 #define MAX_ACP 1023
@@ -14,7 +13,8 @@
 
 #define GET_RES(value) \
   (RESISTOR_FROM_SENSOR * static_cast<float>(value) / (MAX_ACP - value))
-#define TEMP_INTERVAL 0  // ms between samples
+#define TEMP_INTERVAL 100  // ms between samples
+#define ADC_SAMPLES 8      // raw reads averaged into one sample
 
 #define PERM_DIF 150
 #define SPIKE_LIMIT 3
@@ -29,25 +29,17 @@ int32_t ntcResAt(size_t i) {
 }
 
 float getTemp(Sensor *sensor) {
-  // round to the nearest whole ADC count before the table lookup: the filter
-  // output is fractional, and the table is indexed by an integer count
-  sensor->samples[sensor->sampleIdx] = getTempFromTable(sensor);
-  sensor->sampleIdx++;
+  float average = getTempFromTable(sensor);
 
-  if (sensor->sampleIdx >= ATTEMPTS) {
-    sort(sensor->samples, ATTEMPTS);
-    // float averages[3];
-    // for (int i = 0; i<3;i++)
-    //   averages[i] = FloatGetAverageValue(&sensor->samples[1], ATTEMPTS-2);
-    float average = FloatGetAverageValue(&sensor->samples[1], ATTEMPTS - 2);
-
-    if (!sensor->ready || average - sensor->lastTemp > hyst ||
-        sensor->lastTemp - average > hyst)
-
-      sensor->lastTemp = average;
-
-    sensor->sampleIdx = 0;
+  if (!sensor->ready) {
+    sensor->lastTemp = average;
     sensor->ready = true;
+    return sensor->lastTemp + static_cast<float>(sensor->correctInt);
+  }
+
+  if (average - sensor->lastTemp > hyst || sensor->lastTemp - average > hyst) {
+    sensor->increase = average > sensor->lastTemp;
+    sensor->lastTemp = average;
   }
 
   return sensor->lastTemp + static_cast<float>(sensor->correctInt);
@@ -83,22 +75,10 @@ float getTempFromTable(Sensor *sensor) {
 
 void sensorFilterInit(Sensor *sensor, uint8_t pin) {
   sensor->pin = pin;
-#if defined(MEDIAN_FILTER) || defined(EMA_FILTER)
-  int init = analogRead(pin);
-#endif
-
 #ifdef MEDIAN_FILTER
   sensor->median.numNodes = WINDOW_SIZE;
   sensor->median.medianBuffer = sensor->medianBuffer;
-  if (MEDIANFILTER_Init(&sensor->median) == 0) {
-    for (uint8_t i = 0; i < WINDOW_SIZE; i++)
-      MEDIANFILTER_Insert(&sensor->median, init);
-  } else {
-    sensor->median.numNodes = 0;
-  }
-#endif
-#ifdef EMA_FILTER
-  for (uint16_t i = 0; i < (1u << EMA_K); i++) sensor->ema.filter(init);
+  if (MEDIANFILTER_Init(&sensor->median) != 0) sensor->median.numNodes = 0;
 #endif
 }
 
@@ -107,9 +87,11 @@ void constrSensor(Sensor *sensor, uint8_t pin) {
   if (now - sensor->lastSampleMs < TEMP_INTERVAL) {
     return;
   }
-
-  int acp = analogRead(pin);
   sensor->lastSampleMs = now;
+
+  uint32_t sum = 0;
+  for (uint8_t i = 0; i < ADC_SAMPLES; i++) sum += analogRead(pin);
+  int acp = static_cast<int>(sum / ADC_SAMPLES);
 
   if (sensor->lastAcp >= 0 && abs(acp - sensor->lastAcp) > PERM_DIF) {
     if (sensor->spikeCount < SPIKE_LIMIT) {
@@ -120,6 +102,23 @@ void constrSensor(Sensor *sensor, uint8_t pin) {
     sensor->spikeCount = 0;
   }
   sensor->lastAcp = acp;
+
+#if defined(MEDIAN_FILTER) || defined(EMA_FILTER)
+  // prime with the first real sample of this sensor: seeding from a setup time
+  // analogRead would copy the previous channel's voltage, i.e. another
+  // sensor's value, into this sensor's filter state
+  if (!sensor->filterReady) {
+#ifdef MEDIAN_FILTER
+    if (sensor->median.numNodes != 0)
+      for (uint8_t i = 0; i < WINDOW_SIZE; i++)
+        MEDIANFILTER_Insert(&sensor->median, acp);
+#endif
+#ifdef EMA_FILTER
+    for (uint16_t i = 0; i < (1u << EMA_K); i++) sensor->ema.filter(acp);
+#endif
+    sensor->filterReady = true;
+  }
+#endif
 
 #if defined(EMA_FILTER) && defined(MEDIAN_FILTER)
   uint16_t med =
@@ -140,25 +139,32 @@ void constrSensor(Sensor *sensor, uint8_t pin) {
 }
 
 int getIAverageTemp(Sensors *sn) {
-  Sensor *all[] = {sn->_s_main, sn->_s_first, sn->_s_second};
-  int temp[3];
-  int count = 0;
-  for (Sensor *sensor : all) {
-    if (!sensor->ready) continue;
-    temp[count++] = static_cast<int>(sensor->temp);
-  }
-  if (count == 0) return 0;
-  return IntegerGetAverageValue(temp, count);
+  int temp[] = {static_cast<int>(sn->_s_first->temp),
+                static_cast<int>(sn->_s_second->temp),
+                static_cast<int>(sn->_s_third->temp)};
+  return IntegerGetAverageValue(temp, 3);
 }
 
 float getFAverageTemp(Sensors *sn) {
-  Sensor *all[] = {sn->_s_main, sn->_s_first, sn->_s_second};
-  float temp[3];
-  int count = 0;
-  for (Sensor *sensor : all) {
-    if (!sensor->ready) continue;
-    temp[count++] = sensor->temp;
-  }
-  if (count == 0) return 0.0F;
-  return FloatGetAverageValue(temp, count);
+  float temp[] = {sn->_s_first->temp, sn->_s_second->temp, sn->_s_third->temp};
+  return FloatGetAverageValue(temp, 3);
+}
+
+void sensorsLoop() {
+  constrSensor(&Sens::first, FIRST_SENSOR_PIN);
+  constrSensor(&Sens::second, SECOND_RESERVE_SENSOR_PIN);
+  constrSensor(&Sens::third, THIRD_RESERVE_SENSOR_PIN);
+  constrSensor(&Sens::fourth, FOURTH_SENSOR_PIN);
+}
+
+void sensorSetup() {
+  pinMode(FIRST_SENSOR_PIN, INPUT);
+  pinMode(SECOND_RESERVE_SENSOR_PIN, INPUT);
+  pinMode(THIRD_RESERVE_SENSOR_PIN, INPUT);
+  pinMode(FOURTH_SENSOR_PIN, INPUT);
+
+  sensorFilterInit(&Sens::first, FIRST_SENSOR_PIN);
+  sensorFilterInit(&Sens::second, SECOND_RESERVE_SENSOR_PIN);
+  sensorFilterInit(&Sens::third, THIRD_RESERVE_SENSOR_PIN);
+  sensorFilterInit(&Sens::fourth, FOURTH_SENSOR_PIN);
 }
