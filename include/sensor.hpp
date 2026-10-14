@@ -14,10 +14,19 @@
 #define WINDOW_SIZE 5  ///< sliding window length, must be odd and > 1
 #endif
 
-/// correction is an offset in degrees, keep it a sane displayable value
 #define MIN_CORRECT_INT (-50)
 #define MAX_CORRECT_INT 50
 
+#define SENS_SETTINGS_MAGIC 0x5A01
+
+struct SensorSettings {
+  uint16_t magic = SENS_SETTINGS_MAGIC;  ///< validity marker, written as-is
+  int highCorInt = 0;
+  int coolCorInt = 0;
+  int defaultCorInt = 0;
+  int highBorder = 0;
+  int coolBorder = 0;
+};
 struct Sensor {
   int acp;           ///< ADC count (0-1023) after the acp filters
   int lastAcp = -1;  ///< Last accepted raw ADC, -1 until the first reading
@@ -29,7 +38,16 @@ struct Sensor {
   float lastTemp;          ///< Last accepted temperature value
   bool ready;              ///< true once the first sample produced a value
   bool increase = false;   ///< direction of the last temperature change
-  int correctInt;          ///< Integer temperature correction offset
+  // int corInt;          ///< Integer temperature correction offset
+
+  /**
+   * SensorSettings contains the correct integer value for temperature
+   * compensation. if the temperature is higher (e.g >50 C), highCorInt is used
+   * overwise, defaultCorInt is used
+   * if the temperature is lower (e.g <-10 C), coolCorInt is used
+   */
+  SensorSettings settings;
+
 #if defined(MEDIAN_FILTER) || defined(EMA_FILTER)
   bool filterReady = false;  ///< true once the acp filters were primed
 #endif
@@ -66,6 +84,12 @@ float getFAverageTemp(Sensors *sens);
 #ifdef DS18_SENSOR
 float readFromDS18();
 #endif
+
+// write sensor settings to eeprom memory
+void writeSensSett(SensorSettings *, int addr);
+
+// get the struct from eeprom memory
+void readSensSett(SensorSettings *ss, int addr);
 
 namespace Sens {
 inline Sensor first;

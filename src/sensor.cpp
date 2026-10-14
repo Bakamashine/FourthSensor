@@ -1,8 +1,10 @@
 #include "sensor.hpp"
 
 #include <Arduino.h>
+#include <EEPROM.h>
 #include <GyverDS18Single.h>
 
+#include "constants/addr_eeprom.hpp"
 #include "constants/ntcPoint.hpp"
 #include "constants/pin.hpp"
 #include "constants/settings.hpp"
@@ -36,13 +38,22 @@ int32_t ntcResAt(size_t i) {
   return static_cast<int32_t>(pgm_read_dword(&ntcTable[i].resistance));
 }
 
+static float returnTempWithCorInt(float temp, Sensor *sensor) {
+  if (sensor->settings.highBorder + hyst > temp)
+    return temp + static_cast<float>(sensor->settings.highCorInt);
+  if (sensor->settings.coolBorder - hyst < temp)
+    return temp + static_cast<float>(sensor->settings.coolCorInt);
+
+  return temp + static_cast<float>(sensor->settings.defaultCorInt);
+};
+
 float getTemp(Sensor *sensor) {
   float average = getTempFromTable(sensor);
 
   if (!sensor->ready) {
     sensor->lastTemp = average;
     sensor->ready = true;
-    return sensor->lastTemp + static_cast<float>(sensor->correctInt);
+    return returnTempWithCorInt(sensor->lastTemp, sensor);
   }
 
   if (average - sensor->lastTemp > hyst || sensor->lastTemp - average > hyst) {
@@ -50,7 +61,7 @@ float getTemp(Sensor *sensor) {
     sensor->lastTemp = average;
   }
 
-  return sensor->lastTemp + static_cast<float>(sensor->correctInt);
+  return returnTempWithCorInt(sensor->lastTemp, sensor);
 }
 
 float getTempFromTable(Sensor *sensor) {
@@ -112,9 +123,6 @@ void constrSensor(Sensor *sensor, uint8_t pin) {
   sensor->lastAcp = acp;
 
 #if defined(MEDIAN_FILTER) || defined(EMA_FILTER)
-  // prime with the first real sample of this sensor: seeding from a setup time
-  // analogRead would copy the previous channel's voltage, i.e. another
-  // sensor's value, into this sensor's filter state
   if (!sensor->filterReady) {
 #ifdef MEDIAN_FILTER
     if (sensor->median.numNodes != 0)
@@ -179,6 +187,12 @@ void sensorSetup() {
   DS18Setup();
 #endif
   // changeEmaK();
+
+  // read eeprom
+  readSensSett(&Sens::first.settings, ADDR_SENS1_SETTINGS);
+  readSensSett(&Sens::second.settings, ADDR_SENS2_SETTINGS);
+  readSensSett(&Sens::third.settings, ADDR_SENS3_SETTINGS);
+  readSensSett(&Sens::fourth.settings, ADDR_SENS4_SETTINGS);
 }
 
 #ifdef DS18_SENSOR
@@ -192,3 +206,11 @@ float readFromDS18() {
 }
 
 #endif
+
+void writeSensSett(SensorSettings *ss, int addr) { EEPROM.put(addr, *ss); }
+
+void readSensSett(SensorSettings *ss, int addr) {
+  SensorSettings stored;
+  EEPROM.get(addr, stored);
+  if (stored.magic == SENS_SETTINGS_MAGIC) *ss = stored;
+}

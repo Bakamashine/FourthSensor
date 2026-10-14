@@ -35,6 +35,7 @@ int checkSensors(Sensors *sn) {
 }
 
 int checkTemperature(Sensors *sn) {
+#ifdef ENABLE_VALIDATE
   float averageVal = getFAverageTemp(sn);
 
   // the bounds themselves are valid readings, so compare strictly
@@ -44,6 +45,7 @@ int checkTemperature(Sensors *sn) {
   if (minPermOffset > averageVal) {
     return 202;  // average too cold
   }
+#endif
 
   return 0;  // no error
 }

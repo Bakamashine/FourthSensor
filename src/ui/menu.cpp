@@ -1,5 +1,6 @@
 #include "ui/menu.hpp"
 
+#include "constants/settings.hpp"
 #include "contest.hpp"
 #include "helper.hpp"
 #include "macro/ui.hpp"
@@ -35,13 +36,14 @@ struct MenuItem {
 
 static MenuItem _items[MENU_ITEMS_COUNT];
 
+#ifdef ENABLE_SETTINGS
 static void buildItems(Sensors *sensors) {
   // left half, sensor corrections
   _items[0] = {.row = U8G2_SECOND_ROW,
                .markerX = U8G2_MENU_MARKER_X,
                .valueX = U8G2_SECOND_COLUMN,
                .preview = PREVIEW_T1,
-               .value = &sensors->_s_first->correctInt,
+               .value = &sensors->_s_first->corInt,
                .fvalue = nullptr,
                .step = 0,
                .min = MIN_CORRECT_INT,
@@ -50,7 +52,7 @@ static void buildItems(Sensors *sensors) {
                .markerX = U8G2_MENU_MARKER_X,
                .valueX = U8G2_SECOND_COLUMN,
                .preview = PREVIEW_T2,
-               .value = &sensors->_s_second->correctInt,
+               .value = &sensors->_s_second->corInt,
                .fvalue = nullptr,
                .step = 0,
                .min = MIN_CORRECT_INT,
@@ -59,7 +61,7 @@ static void buildItems(Sensors *sensors) {
                .markerX = U8G2_MENU_MARKER_X,
                .valueX = U8G2_SECOND_COLUMN,
                .preview = PREVIEW_T3,
-               .value = &sensors->_s_third->correctInt,
+               .value = &sensors->_s_third->corInt,
                .fvalue = nullptr,
                .step = 0,
                .min = MIN_CORRECT_INT,
@@ -68,7 +70,7 @@ static void buildItems(Sensors *sensors) {
                .markerX = U8G2_MENU_MARKER_X,
                .valueX = U8G2_SECOND_COLUMN,
                .preview = PREVIEW_T4,
-               .value = &sensors->_s_fourth->correctInt,
+               .value = &sensors->_s_fourth->corInt,
                .fvalue = nullptr,
                .step = 0,
                .min = MIN_CORRECT_INT,
@@ -112,6 +114,9 @@ static void buildItems(Sensors *sensors) {
                .min = UTEMP_MIN,
                .max = UTEMP_MAX};
 }
+#endif
+
+#ifdef ENABLE_SETTINGS
 
 /// one decimal digit only when it is not zero: the right half of the menu
 /// has ~45 px per cell and AVR has no float printf
@@ -159,8 +164,10 @@ static void drawMarker(U8G2 *display) {
   const MenuItem &item = _items[_selected];
   display->drawStr(item.markerX, item.row, ">");
 }
+#endif  // ENABLE_SETTINGS
 
 void menuPage(U8G2 *display, Sensors *sensors) {
+#ifdef ENABLE_SETTINGS
   display->drawStr(_CENTER_X(display, PREVIEW_MENU), _CENTER_Y(display),
                    PREVIEW_MENU);
   buildItems(sensors);
@@ -168,6 +175,7 @@ void menuPage(U8G2 *display, Sensors *sensors) {
   drawMarker(display);
 
   if (isValueOpen) display->drawStr(U8G2_EDIT_X, U8G2_EDIT_Y, "ON");
+#endif
 }
 
 static void changeSelected(int delta) {

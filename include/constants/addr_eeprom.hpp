@@ -1,0 +1,16 @@
+#pragma once
+#include "constants/settings.hpp"
+#include "sensor.hpp"  // SensorSettings
+
+#define ADDR_HYST 0
+
+#define SENS_SETTINGS_SIZE sizeof(SensorSettings)
+#define ADDR_SENS1_SETTINGS (ADDR_HYST + 1)
+#define ADDR_SENS2_SETTINGS (ADDR_SENS1_SETTINGS + SENS_SETTINGS_SIZE)
+#define ADDR_SENS3_SETTINGS (ADDR_SENS2_SETTINGS + SENS_SETTINGS_SIZE)
+#define ADDR_SENS4_SETTINGS (ADDR_SENS3_SETTINGS + SENS_SETTINGS_SIZE)
+
+#ifdef ENABLE_VALIDATE
+#define ADDR_MIN_PERM_OFFSET (ADDR_SENS4_SETTINGS + SENS_SETTINGS_SIZE)
+#define ADDR_MAX_PERM_OFFSET (ADDR_MIN_PERM_OFFSET + sizeof(int))
+#endif
