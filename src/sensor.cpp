@@ -18,20 +18,14 @@
   (RESISTOR_FROM_SENSOR * static_cast<float>(value) / (MAX_ACP - value))
 #define RESISTOR_FROM_SENSOR 2000  // 2kOm
 #endif
-// Unused: sampling is no longer time-gated. constrSensor runs on every loop()
-// and the median/EMA filters smooth by sample count, so a fixed millisecond
-// gate only made the effective filter rate follow the loop timing (U8g2/Serial).
-// #define TEMP_INTERVAL 100  // ms between samples
-#define ADC_SAMPLES 8      // raw reads averaged into one sample
 
-#define PERM_DIF 100
+#define ADC_SAMPLES 8  // raw reads averaged into one sample
+
+#define PERM_DIF 150
 #define SPIKE_LIMIT 3
 
 float getTempFromTable(Sensor *);
 
-// Unused: per-sensor EMA tuning is not applied. Every sensor keeps the default
-// EMA_K, and the boot transient is now removed by a single ema.reset() instead
-// of lengthening/shortening the warmup per sensor.
 // static void changeEmaK() {
 //   Sens::first.ema.setK(2);
 //   Sens::second.ema.setK(4);
@@ -54,12 +48,14 @@ uint16_t ntcAcpAt(size_t i) {
 #endif
 
 static float returnTempWithCorInt(float temp, Sensor *sensor) {
-  if (sensor->settings.highBorder + hyst > temp)
-    return temp + static_cast<float>(sensor->settings.highCorInt);
-  if (sensor->settings.coolBorder - hyst < temp)
-    return temp + static_cast<float>(sensor->settings.coolCorInt);
+  // if (sensor->settings.highBorder + hyst > temp)
+  //   return temp + static_cast<float>(sensor->settings.highCorInt);
+  // if (sensor->settings.coolBorder - hyst < temp)
+  //   return temp + static_cast<float>(sensor->settings.coolCorInt);
 
-  return temp + static_cast<float>(sensor->settings.defaultCorInt);
+  // return temp + static_cast<float>(sensor->settings.defaultCorInt);
+
+  return temp;
 };
 
 float getTemp(Sensor *sensor) {
@@ -72,7 +68,7 @@ float getTemp(Sensor *sensor) {
   }
 
   if (average - sensor->lastTemp > hyst || sensor->lastTemp - average > hyst) {
-    // sensor->increase = average > sensor->lastTemp;  // unused (write-only)
+    // sensor->increase = average > sensor->lastTemp;
     sensor->lastTemp = average;
   }
 
@@ -144,10 +140,6 @@ void sensorFilterInit(Sensor *sensor, uint8_t pin) {
 }
 
 void constrSensor(Sensor *sensor, uint8_t pin) {
-  // Disabled time gate. It throttled each sensor to one sample per
-  // TEMP_INTERVAL, but the median/EMA filters already smooth by sample count;
-  // the gate only coupled the filter rate to loop timing. Sampling every loop
-  // keeps the filters deterministic, so lastSampleMs/TEMP_INTERVAL are unused.
   // uint32_t now = millis();
   // if (now - sensor->lastSampleMs < TEMP_INTERVAL) {
   //   return;
@@ -239,6 +231,12 @@ void sensorSetup() {
   readSensSett(&Sens::second.settings, ADDR_SENS2_SETTINGS);
   readSensSett(&Sens::third.settings, ADDR_SENS3_SETTINGS);
   readSensSett(&Sens::fourth.settings, ADDR_SENS4_SETTINGS);
+#ifdef EMA_FILTER
+  Sens::first.ema.setK(static_cast<uint8_t>(Sens::first.settings.ema_k));
+  Sens::second.ema.setK(static_cast<uint8_t>(Sens::second.settings.ema_k));
+  Sens::third.ema.setK(static_cast<uint8_t>(Sens::third.settings.ema_k));
+  Sens::fourth.ema.setK(static_cast<uint8_t>(Sens::fourth.settings.ema_k));
+#endif
 }
 
 #ifdef DS18_SENSOR

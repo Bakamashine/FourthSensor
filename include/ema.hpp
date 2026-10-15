@@ -1,7 +1,7 @@
 #pragma once
 
 #include <stdint.h>
-#define EMA_K 6 
+#define DEFAULT_EMA_K 6
 
 /**
  * @brief   A class for single-pole infinite impulse response filters
@@ -51,9 +51,12 @@ class EMA {
     return output;
   }
 
-  // Unused: setK was only called from changeEmaK(), which is disabled, so K
-  // always stays at the EMA_K default. Kept for reference.
-  // void setK(uint8_t k) { K = k; fixedPointAHalf = 1 << (K - 1);  }
+  void setK(uint8_t k) {
+    if (k < 1) k = 1;
+    if (k > 15) k = 15;
+    K = k;
+    fixedPointAHalf = 1 << (K - 1);
+  }
 
   /**
    * @brief   Prime the filter so that the next output equals `value`.
@@ -63,9 +66,7 @@ class EMA {
    *          error.  Setting the integrator state directly makes the filtered
    *          output start exactly at the current sample.
    */
-  void reset(uint_t value) {
-    filtered = static_cast<uint_t>(value) << K;
-  }
+  void reset(uint_t value) { filtered = static_cast<uint_t>(value) << K; }
 
   /**
    * @brief   Filter the input: Given @f$ x[n] @f$, calculate @f$ y[n] @f$.
@@ -82,6 +83,6 @@ class EMA {
 
  private:
   uint_t filtered = 0;
-  uint8_t K = EMA_K;
+  uint8_t K = DEFAULT_EMA_K;
   uint_t fixedPointAHalf = 1 << (K - 1);
 };

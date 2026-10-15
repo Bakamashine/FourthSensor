@@ -6,6 +6,7 @@
 #include "page.hpp"
 #include "sensor.hpp"
 #include "ui/menu.hpp"
+#include "validate.hpp"
 
 namespace UI {
 void mainPage(U8G2 *display, Sensors *sensors) {
@@ -39,7 +40,7 @@ void mainPage(U8G2 *display, Sensors *sensors) {
 #ifdef DS18_SENSOR
   // DS18 sensor: temperature only, so it goes into the temperature column
   char ds18Buf[10];
-  setFloatText(ds18Buf, sizeof(ds18Buf), Sens::ds18Temp);
+  dtostrf(Sens::ds18Temp, 0, 2, ds18Buf);
   RAW_WRITE_ROW(U8G2_MAIN_ROW(5), PREVIEW_DS18, nullptr, ds18Buf, display);
 #endif
 }
@@ -54,11 +55,12 @@ void draw() {
         break;
       case SETTINGS:
         menuPage(&u8g2, &Sens::all);
+
         break;
 
 #ifdef ENABLE_VALIDATE
       case ERROR:
-        errorPage(&u8g2, errorCode);
+        errorPage(&u8g2, Validate::errorCode);
         break;
 #endif
     }

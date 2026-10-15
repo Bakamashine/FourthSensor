@@ -9,3 +9,7 @@ void errorPage(U8G2 *display, int error_code) {
   snprintf(error_message, error_message_size, "Error: %d", error_code);
   drawCentered(display, error_message, 0, 0, 0, 0);
 }
+
+namespace UI {
+void errorPage(U8G2 *, int) {}
+}  // namespace UI

@@ -2,4 +2,4 @@
 
 enum Pages { MAIN, SETTINGS, ERROR, COUNT_PAGES };
 
-inline int currentPage = MAIN;
+inline int currentPage = SETTINGS;

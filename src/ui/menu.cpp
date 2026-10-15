@@ -16,103 +16,124 @@
 #define UTEMP_MIN 0
 #define UTEMP_MAX 100
 
-/// left half: the four sensor corrections, right half: the settings
-#define MENU_LEFT_ITEMS 4
-#define MENU_ITEMS_COUNT (MENU_LEFT_ITEMS + 4)
+#define MENU_ITEMS_COUNT 5
+#define MAX_DEEP_ITEMS 4
 
-/// avr-gcc only accepts a designated initializer when every member is named
-/// in declaration order, so keep this list complete
 struct MenuItem {
-  int row;      ///< y of the row the value is drawn on
-  int markerX;  ///< x of the selection marker for this cell
-  int valueX;   ///< x the value (and, on the right half, the label) is drawn
+  int row;
+  int marker;
   const char *preview;
-  int *value;     ///< address of the edited variable, 0 if fvalue is used
-  float *fvalue;  ///< address of the edited variable, 0 if value is used
-  float step;     ///< change per press, only used for fvalue
-  int min;        ///< smallest value the variable may take
-  int max;        ///< largest value the variable may take
+  Sensor *sensor;
+};
+
+enum DeepValueKind { DEEP_INT, DEEP_FLOAT };
+
+struct DeepMenuItem {
+  int row;
+  const char *preview;
+  void *target;
+  DeepValueKind kind;
+  float step;
+  float min;
+  float max;
 };
 
 static MenuItem _items[MENU_ITEMS_COUNT];
+static DeepMenuItem _deepMenuItems[MAX_DEEP_ITEMS];
+static int _deepMenuCount = 0;
 
 #ifdef ENABLE_SETTINGS
 static void buildItems(Sensors *sensors) {
-  // left half, sensor corrections
-  _items[0] = {.row = U8G2_SECOND_ROW,
-               .markerX = U8G2_MENU_MARKER_X,
-               .valueX = U8G2_SECOND_COLUMN,
-               .preview = PREVIEW_T1,
-               .value = &sensors->_s_first->corInt,
-               .fvalue = nullptr,
-               .step = 0,
-               .min = MIN_CORRECT_INT,
-               .max = MAX_CORRECT_INT};
-  _items[1] = {.row = U8G2_THIRD_ROW,
-               .markerX = U8G2_MENU_MARKER_X,
-               .valueX = U8G2_SECOND_COLUMN,
-               .preview = PREVIEW_T2,
-               .value = &sensors->_s_second->corInt,
-               .fvalue = nullptr,
-               .step = 0,
-               .min = MIN_CORRECT_INT,
-               .max = MAX_CORRECT_INT};
-  _items[2] = {.row = U8G2_FOURTH_ROW,
-               .markerX = U8G2_MENU_MARKER_X,
-               .valueX = U8G2_SECOND_COLUMN,
-               .preview = PREVIEW_T3,
-               .value = &sensors->_s_third->corInt,
-               .fvalue = nullptr,
-               .step = 0,
-               .min = MIN_CORRECT_INT,
-               .max = MAX_CORRECT_INT};
-  _items[3] = {.row = U8G2_FIFTH_ROW,
-               .markerX = U8G2_MENU_MARKER_X,
-               .valueX = U8G2_SECOND_COLUMN,
-               .preview = PREVIEW_T4,
-               .value = &sensors->_s_fourth->corInt,
-               .fvalue = nullptr,
-               .step = 0,
-               .min = MIN_CORRECT_INT,
-               .max = MAX_CORRECT_INT};
+  _items[0] = {.row = U8G2_FIRST_ROW,
+               .marker = 0,
+               .preview = PREVIEW_S1,
+               .sensor = sensors->_s_first};
+  _items[1] = {.row = U8G2_SECOND_ROW,
+               .marker = 0,
+               .preview = PREVIEW_S2,
+               .sensor = sensors->_s_second};
+  _items[2] = {.row = U8G2_THIRD_ROW,
+               .marker = 0,
+               .preview = PREVIEW_S3,
+               .sensor = sensors->_s_third};
+  _items[3] = {.row = U8G2_FOURTH_ROW,
+               .marker = 0,
+               .preview = PREVIEW_S4,
+               .sensor = sensors->_s_fourth};
+  _items[4] = {.row = U8G2_FIFTH_ROW,
+               .marker = 0,
+               .preview = PREVIEW_OTHER,
+               .sensor = nullptr};
+}
 
-  // right half, settings; min/max of the permitted offset are kept ordered
-  _items[4] = {.row = U8G2_SECOND_ROW,
-               .markerX = U8G2_MENU_MARKER2_X,
-               .valueX = U8G2_THIRD_COLUMN,
-               .preview = PREVIEW_HYST,
-               .value = nullptr,
-               .fvalue = &hyst,
-               .step = HYST_STEP,
-               .min = HYST_MIN,
-               .max = HYST_MAX};
-  _items[5] = {.row = U8G2_THIRD_ROW,
-               .markerX = U8G2_MENU_MARKER2_X,
-               .valueX = U8G2_THIRD_COLUMN,
-               .preview = PREVIEW_MAX,
-               .value = &maxPermOffset,
-               .fvalue = nullptr,
-               .step = 0,
-               .min = minPermOffset,
-               .max = OFFSET_MAX};
-  _items[6] = {.row = U8G2_FOURTH_ROW,
-               .markerX = U8G2_MENU_MARKER2_X,
-               .valueX = U8G2_THIRD_COLUMN,
-               .preview = PREVIEW_MIN,
-               .value = &minPermOffset,
-               .fvalue = nullptr,
-               .step = 0,
-               .min = OFFSET_MIN,
-               .max = maxPermOffset};
-  _items[7] = {.row = U8G2_FIFTH_ROW,
-               .markerX = U8G2_MENU_MARKER2_X,
-               .valueX = U8G2_THIRD_COLUMN,
-               .preview = PREVIEW_USER_TEMP,
-               .value = &uTemp,
-               .fvalue = nullptr,
-               .step = 0,
-               .min = UTEMP_MIN,
-               .max = UTEMP_MAX};
+static void buildSensorDeepMenu(Sensor *sensor) {
+  _deepMenuCount = 1;
+  _deepMenuItems[0] = {.row = U8G2_FIRST_ROW,
+                       .preview = "EMA",
+                       .target = &sensor->settings.ema_k,
+                       .kind = DEEP_INT,
+                       .step = 1,
+                       .min = 1,
+                       .max = 10};
+}
+
+static void buildOtherDeepMenu() {
+  int count = 0;
+  _deepMenuItems[count] = {.row = U8G2_FIRST_ROW,
+                           .preview = "Hyst",
+                           .target = &hyst,
+                           .kind = DEEP_FLOAT,
+                           .step = HYST_STEP,
+                           .min = HYST_MIN,
+                           .max = HYST_MAX};
+  count++;
+#ifdef ENABLE_VALIDATE
+  _deepMenuItems[count] = {.row = U8G2_SECOND_ROW,
+                           .preview = "Max",
+                           .target = &maxPermOffset,
+                           .kind = DEEP_INT,
+                           .step = 1,
+                           .min = static_cast<float>(minPermOffset),
+                           .max = OFFSET_MAX};
+  count++;
+  _deepMenuItems[count] = {.row = U8G2_THIRD_ROW,
+                           .preview = "Min",
+                           .target = &minPermOffset,
+                           .kind = DEEP_INT,
+                           .step = 1,
+                           .min = OFFSET_MIN,
+                           .max = static_cast<float>(maxPermOffset)};
+  count++;
+#endif
+  _deepMenuItems[count] = {.row = U8G2_FIRST_ROW + count * U8G2_ROW_STEP,
+                           .preview = "UserT",
+                           .target = &uTemp,
+                           .kind = DEEP_INT,
+                           .step = 1,
+                           .min = UTEMP_MIN,
+                           .max = UTEMP_MAX};
+  count++;
+  _deepMenuCount = count;
+}
+
+static void formatDeepValue(const DeepMenuItem &item, char *buf, size_t size) {
+  if (item.kind == DEEP_FLOAT) {
+    dtostrf(*static_cast<float *>(item.target), 0, 2, buf);
+  } else {
+    snprintf(buf, size, "%d", *static_cast<int *>(item.target));
+  }
+}
+
+static void drawDeepMenu(U8G2 *display) {
+  for (int i = 0; i < _deepMenuCount; i++) {
+    const DeepMenuItem &item = _deepMenuItems[i];
+    char buf[10];
+    formatDeepValue(item, buf, sizeof(buf));
+    display->drawStr(U8G2_FIRST_COLUMN, item.row, item.preview);
+    display->drawStr(U8G2_SECOND_COLUMN, item.row, buf);
+    if (i == _deepMenuSelected)
+      display->drawStr(U8G2_MENU_MARKER_X, item.row, ">");
+  }
 }
 #endif
 
@@ -120,90 +141,111 @@ static void buildItems(Sensors *sensors) {
 
 /// one decimal digit only when it is not zero: the right half of the menu
 /// has ~45 px per cell and AVR has no float printf
-static void setStepText(char *buf, size_t size, float v) {
-  long scaled = static_cast<long>(v * 100.0F + (v < 0.0F ? -0.05F : 0.05F));
-  long frac = scaled % 100;
-  if (frac < 0) frac = -frac;
+// static void setStepText(char *buf, size_t size, float v) {
+//   long scaled = static_cast<long>(v * 100.0F + (v < 0.0F ? -0.05F : 0.05F));
+//   long frac = scaled % 100;
+//   if (frac < 0) frac = -frac;
 
-  if (frac == 0)
-    snprintf(buf, size, "%ld", scaled / 100);
-  else
-    snprintf(buf, size, "%ld.%02ld", scaled / 100, frac);
-}
-
-static void formatValue(const MenuItem &item, char *buf, size_t size) {
-  if (item.value != nullptr)
-    setIntText(buf, size, *item.value);
-  else if (item.fvalue != nullptr)
-    setStepText(buf, size, *item.fvalue);
-  else
-    buf[0] = '\0';
-}
+//   if (frac == 0)
+//     snprintf(buf, size, "%ld", scaled / 100);
+//   else
+//     snprintf(buf, size, "%ld.%02ld", scaled / 100, frac);
+// }
 
 static void drawItems(U8G2 *display) {
-  char valueStr[10];
-  char line[20];
-
   for (int i = 0; i < MENU_ITEMS_COUNT; i++) {
     const MenuItem &item = _items[i];
-    formatValue(item, valueStr, sizeof(valueStr));
-
-    if (i < MENU_LEFT_ITEMS) {
-      display->drawStr(U8G2_FIRST_COLUMN, item.row, item.preview);
-      display->drawStr(item.valueX, item.row, valueStr);
-    } else {
-      // the right half is narrower, label and value share one string
-      snprintf(line, sizeof(line), "%s %s", item.preview, valueStr);
-      display->drawStr(item.valueX, item.row, line);
-    }
+    display->drawStr(U8G2_FIRST_COLUMN, item.row, item.preview);
   }
 }
 
 static void drawMarker(U8G2 *display) {
-  if (_selected < 0 || _selected >= MENU_ITEMS_COUNT) return;
-  const MenuItem &item = _items[_selected];
-  display->drawStr(item.markerX, item.row, ">");
+  if (_baseMenuSelected < 0 || _baseMenuSelected >= MENU_ITEMS_COUNT) return;
+  const MenuItem &item = _items[_baseMenuSelected];
+  display->drawStr(item.marker, item.row, ">");
 }
 #endif  // ENABLE_SETTINGS
 
 void menuPage(U8G2 *display, Sensors *sensors) {
 #ifdef ENABLE_SETTINGS
-  display->drawStr(_CENTER_X(display, PREVIEW_MENU), _CENTER_Y(display),
-                   PREVIEW_MENU);
   buildItems(sensors);
+  if (isDeepMenuOpen && _baseMenuSelected >= 0 &&
+      _baseMenuSelected < MENU_ITEMS_COUNT) {
+    Sensor *selected = _items[_baseMenuSelected].sensor;
+    if (selected != nullptr) {
+      buildSensorDeepMenu(selected);
+#ifdef EMA_FILTER
+      selected->ema.setK(static_cast<uint8_t>(selected->settings.ema_k));
+#endif
+    } else {
+      buildOtherDeepMenu();
+    }
+    if (_deepMenuSelected < 0 || _deepMenuSelected >= _deepMenuCount)
+      _deepMenuSelected = 0;
+    drawDeepMenu(display);
+    return;
+  }
   drawItems(display);
   drawMarker(display);
-
-  if (isValueOpen) display->drawStr(U8G2_EDIT_X, U8G2_EDIT_Y, "ON");
 #endif
 }
 
-static void changeSelected(int delta) {
-  if (_selected < 0 || _selected >= MENU_ITEMS_COUNT) return;
+// static void changeSelected(int delta) {
+//   if (_selected < 0 || _selected >= MENU_ITEMS_COUNT) return;
 
-  const MenuItem &item = _items[_selected];
+//   const MenuItem &item = _items[_selected];
 
-  if (item.value != nullptr) {
-    int next = *item.value + delta;
+//   if (item.value != nullptr) {
+//     int next = *item.value + delta;
+//     if (next < item.min) next = item.min;
+//     if (next > item.max) next = item.max;
+//     *item.value = next;
+//   } else if (item.fvalue != nullptr) {
+//     float next = *item.fvalue + static_cast<float>(delta) * item.step;
+//     if (next < static_cast<float>(item.min))
+//       next = static_cast<float>(item.min);
+//     if (next > static_cast<float>(item.max))
+//       next = static_cast<float>(item.max);
+//     *item.fvalue = next;
+//   }
+// }
+
+static void changeDeepValue(int delta) {
+  if (_deepMenuSelected < 0 || _deepMenuSelected >= _deepMenuCount) return;
+  DeepMenuItem &item = _deepMenuItems[_deepMenuSelected];
+  if (item.kind == DEEP_FLOAT) {
+    float *p = static_cast<float *>(item.target);
+    float next = *p + static_cast<float>(delta) * item.step;
     if (next < item.min) next = item.min;
     if (next > item.max) next = item.max;
-    *item.value = next;
-  } else if (item.fvalue != nullptr) {
-    float next = *item.fvalue + static_cast<float>(delta) * item.step;
-    if (next < static_cast<float>(item.min))
-      next = static_cast<float>(item.min);
-    if (next > static_cast<float>(item.max))
-      next = static_cast<float>(item.max);
-    *item.fvalue = next;
+    *p = next;
+  } else {
+    int *p = static_cast<int *>(item.target);
+    long next = static_cast<long>(*p) + delta;
+    if (next < static_cast<long>(item.min)) next = static_cast<long>(item.min);
+    if (next > static_cast<long>(item.max)) next = static_cast<long>(item.max);
+    *p = static_cast<int>(next);
   }
 }
 
-void menuPageIncreaseValue() { changeSelected(1); }
+void menuPageIncreaseValue() { changeDeepValue(1); }
 
-void menuPageDecreaseValue() { changeSelected(-1); }
+void menuPageDecreaseValue() { changeDeepValue(-1); }
 
-void menuSelectNext() { _selected = (_selected + 1) % MENU_ITEMS_COUNT; }
+void menuSelectNext() {
+  if (!isDeepMenuOpen) {
+    _baseMenuSelected = (_baseMenuSelected + 1) % MENU_ITEMS_COUNT;
+  } else if (_deepMenuCount > 0) {
+    _deepMenuSelected = (_deepMenuSelected + 1) % _deepMenuCount;
+  }
+}
 
 void menuSelectPrev() {
-  _selected = (_selected - 1 + MENU_ITEMS_COUNT) % MENU_ITEMS_COUNT;
+  if (!isDeepMenuOpen) {
+    _baseMenuSelected =
+        (_baseMenuSelected - 1 + MENU_ITEMS_COUNT) % MENU_ITEMS_COUNT;
+  } else if (_deepMenuCount > 0) {
+    _deepMenuSelected =
+        (_deepMenuSelected - 1 + _deepMenuCount) % _deepMenuCount;
+  }
 }

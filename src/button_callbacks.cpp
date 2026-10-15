@@ -27,8 +27,12 @@ void btnSetup() {
 }
 
 void btnMenuOnClick() {
+  if (currentPage == SETTINGS && isDeepMenuOpen) {
+    isDeepMenuOpen = false;
+    return;
+  }
   currentPage = currentPage == MAIN ? SETTINGS : MAIN;
-  isValueOpen = false;
+  isDeepMenuOpen = false;
 }
 
 void btnTick() {
@@ -44,31 +48,37 @@ void deleteButtons() {
 }
 
 void btnPlusLongPress() {
-  if (currentPage == SETTINGS) isValueOpen = 1;
+  if (currentPage != SETTINGS) return;
+  if (!isDeepMenuOpen) {
+    isDeepMenuOpen = true;
+    _deepMenuSelected = 0;
+  } else {
+    menuSelectPrev();
+  }
 }
 
 void btnPlusOneClick() {
-  if (currentPage == SETTINGS && !isValueOpen) {
+  if (currentPage == SETTINGS && !isDeepMenuOpen) {
     menuSelectPrev();
 #ifdef DEBUG
     Serial.println("goToUp");
 #endif
-  } else if (currentPage == SETTINGS && isValueOpen) {
+  } else if (currentPage == SETTINGS && isDeepMenuOpen) {
     menuPageIncreaseValue();
   }
 }
 void btnMenuLongPress() { btnMenuOnClick(); }
 
 void btnMinusOneClick() {
-  if (currentPage == SETTINGS && !isValueOpen) {
+  if (currentPage == SETTINGS && !isDeepMenuOpen) {
     menuSelectNext();
 #ifdef DEBUG
     Serial.println("goToDown");
 #endif
-  } else if (currentPage == SETTINGS && isValueOpen) {
+  } else if (currentPage == SETTINGS && isDeepMenuOpen) {
     menuPageDecreaseValue();
   }
 }
 void btnMinusLongPress() {
-  if (currentPage == SETTINGS) isValueOpen = 0;
+  if (currentPage == SETTINGS && isDeepMenuOpen) menuSelectNext();
 }

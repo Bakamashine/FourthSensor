@@ -18,8 +18,11 @@ void handleCommand();
 #endif
 #ifdef ENABLE_VALIDATE
 #include "validate.hpp"
-void haltSystem();
+void haltSystem() {}
 int systemHalted = 0;
+#endif
+#ifdef ENABLE_BURNER
+#include "burner.hpp"
 #endif
 
 void debugPrint() {
@@ -40,40 +43,40 @@ void debugPrint() {
 #endif
 
   // correct integer
-  PRINT_DEBUG("[CORRECT INT] first high correct int: ",
-              Sens::first.settings.highCorInt);
-  PRINT_DEBUG("[CORRECT INT] first cool correct int: ",
-              Sens::first.settings.coolCorInt);
-  PRINT_DEBUG("[CORRECT INT] second high correct int: ",
-              Sens::second.settings.highCorInt);
-  PRINT_DEBUG("[CORRECT INT] second cool correct int: ",
-              Sens::second.settings.coolCorInt);
-  PRINT_DEBUG("[CORRECT INT] third high correct int: ",
-              Sens::third.settings.highCorInt);
-  PRINT_DEBUG("[CORRECT INT] third cool correct int: ",
-              Sens::third.settings.coolCorInt);
-  PRINT_DEBUG("[CORRECT INT] fourth high correct int: ",
-              Sens::fourth.settings.highCorInt);
-  PRINT_DEBUG("[CORRECT INT] fourth cool correct int: ",
-              Sens::fourth.settings.coolCorInt);
+  // PRINT_DEBUG("[CORRECT INT] first high correct int: ",
+  //             Sens::first.settings.highCorInt);
+  // PRINT_DEBUG("[CORRECT INT] first cool correct int: ",
+  //             Sens::first.settings.coolCorInt);
+  // PRINT_DEBUG("[CORRECT INT] second high correct int: ",
+  //             Sens::second.settings.highCorInt);
+  // PRINT_DEBUG("[CORRECT INT] second cool correct int: ",
+  //             Sens::second.settings.coolCorInt);
+  // PRINT_DEBUG("[CORRECT INT] third high correct int: ",
+  //             Sens::third.settings.highCorInt);
+  // PRINT_DEBUG("[CORRECT INT] third cool correct int: ",
+  //             Sens::third.settings.coolCorInt);
+  // PRINT_DEBUG("[CORRECT INT] fourth high correct int: ",
+  //             Sens::fourth.settings.highCorInt);
+  // PRINT_DEBUG("[CORRECT INT] fourth cool correct int: ",
+  //             Sens::fourth.settings.coolCorInt);
 
   // temperature border
-  PRINT_DEBUG("[TEMP BORDER] first high temperature: ",
-              Sens::first.settings.highBorder);
-  PRINT_DEBUG("[TEMP BORDER] first cool temperature: ",
-              Sens::first.settings.coolBorder);
-  PRINT_DEBUG("[TEMP BORDER] second high temperature: ",
-              Sens::second.settings.highBorder);
-  PRINT_DEBUG("[TEMP BORDER] second cool temperature: ",
-              Sens::second.settings.coolBorder);
-  PRINT_DEBUG("[TEMP BORDER] third high temperature: ",
-              Sens::third.settings.highBorder);
-  PRINT_DEBUG("[TEMP BORDER] third cool temperature: ",
-              Sens::third.settings.coolBorder);
-  PRINT_DEBUG("[TEMP BORDER] fourth high temperature: ",
-              Sens::fourth.settings.highBorder);
-  PRINT_DEBUG("[TEMP BORDER] fourth cool temperature: ",
-              Sens::fourth.settings.coolBorder);
+  // PRINT_DEBUG("[TEMP BORDER] first high temperature: ",
+  //             Sens::first.settings.highBorder);
+  // PRINT_DEBUG("[TEMP BORDER] first cool temperature: ",
+  //             Sens::first.settings.coolBorder);
+  // PRINT_DEBUG("[TEMP BORDER] second high temperature: ",
+  //             Sens::second.settings.highBorder);
+  // PRINT_DEBUG("[TEMP BORDER] second cool temperature: ",
+  //             Sens::second.settings.coolBorder);
+  // PRINT_DEBUG("[TEMP BORDER] third high temperature: ",
+  //             Sens::third.settings.highBorder);
+  // PRINT_DEBUG("[TEMP BORDER] third cool temperature: ",
+  //             Sens::third.settings.coolBorder);
+  // PRINT_DEBUG("[TEMP BORDER] fourth high temperature: ",
+  //             Sens::fourth.settings.highBorder);
+  // PRINT_DEBUG("[TEMP BORDER] fourth cool temperature: ",
+  //             Sens::fourth.settings.coolBorder);
 
 // other variables
 #ifdef ENABLE_BURNER
@@ -82,11 +85,11 @@ void debugPrint() {
 #endif
 
   PRINT_DEBUG("[SETTINGS_H] Hysteresis: ", hyst);
-  PRINT_DEBUG("[MENU_UI_H] isValueOpen: ", isValueOpen);
-  PRINT_DEBUG("[MENU_UI_H] _selected: ", _selected);
+  PRINT_DEBUG("[MENU_UI_H] isValueOpen: ", isDeepMenuOpen);
+  PRINT_DEBUG("[MENU_UI_H] _selected: ", _baseMenuSelected);
   PRINT_DEBUG("[PAGE_H] currentPage: ", currentPage);
 #ifdef ENABLE_VALIDATE
-  PRINT_DEBUG("[ERROR_H] errorCode: ", errorCode);
+  PRINT_DEBUG("[ERROR_H] errorCode: ", Validate::errorCode);
   PRINT_DEBUG("[SETTINGS_H] minPermOffset: ", minPermOffset);
   PRINT_DEBUG("[SETTINGS_H] maxPermOffset: ", maxPermOffset);
 #endif
@@ -126,10 +129,10 @@ void loop() {
 #ifdef ENABLE_VALIDATE
   // validate
   Validate::pipeline(&Sens::all);
-  if (errorCode > 0) haltSystem();
+  if (Validate::errorCode > 0) haltSystem();
 #endif
 
 #ifdef ENABLE_BURNER
-  burnerSystem();
+  Burner::burnerSystem();
 #endif
 }

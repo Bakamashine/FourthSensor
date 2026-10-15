@@ -17,31 +17,30 @@
 #define MIN_CORRECT_INT (-50)
 #define MAX_CORRECT_INT 50
 
-#define SENS_SETTINGS_MAGIC 0x5A01
+#define SENS_SETTINGS_MAGIC 0x5A02
 
 struct SensorSettings {
   uint16_t magic = SENS_SETTINGS_MAGIC;  ///< validity marker, written as-is
-  int highCorInt = 0;
-  int coolCorInt = 0;
-  int defaultCorInt = 0;
-  int highBorder = 0;
-  int coolBorder = 0;
+  int ema_k = DEFAULT_EMA_K;
+
+  // int highCorInt = 0;
+  // int coolCorInt = 0;
+  // int defaultCorInt = 0;
+  // int highBorder = 0;
+  // int coolBorder = 0;
 };
 struct Sensor {
-  unsigned int acp;           ///< ADC count (0-1023) after the acp filters
+  unsigned int acp;  ///< ADC count (0-1023) after the acp filters
   int lastAcp = -1;  ///< Last accepted raw ADC, -1 until the first reading
   uint8_t spikeCount = 0;  ///< Consecutive samples rejected as glitches
   float temp;              ///< Calculated temperature in degrees Celsius
-  #if TEMP_CALCULATION_VARIANT == VIA_RESISTANCE
-  float resist;            ///< Calculated sensor resistance in ohms
-  #endif
-  uint8_t pin;             ///< Analog pin the sensor is connected to
-  // Unused: was only read by the disabled TEMP_INTERVAL time gate in
-  // constrSensor().
+#if TEMP_CALCULATION_VARIANT == VIA_RESISTANCE
+  float resist;  ///< Calculated sensor resistance in ohms
+#endif
+  uint8_t pin;  ///< Analog pin the sensor is connected to
   // uint32_t lastSampleMs;   ///< Timestamp of the last temperature sample (ms)
-  float lastTemp;          ///< Last accepted temperature value
-  bool ready;              ///< true once the first sample produced a value
-  // Unused (write-only): assigned in getTemp() but never read anywhere.
+  float lastTemp;  ///< Last accepted temperature value
+  bool ready;      ///< true once the first sample produced a value
   // bool increase = false;   ///< direction of the last temperature change
   // int corInt;          ///< Integer temperature correction offset
 
