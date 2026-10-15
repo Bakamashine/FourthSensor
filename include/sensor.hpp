@@ -36,10 +36,13 @@ struct Sensor {
   float resist;            ///< Calculated sensor resistance in ohms
   #endif
   uint8_t pin;             ///< Analog pin the sensor is connected to
-  uint32_t lastSampleMs;   ///< Timestamp of the last temperature sample (ms)
+  // Unused: was only read by the disabled TEMP_INTERVAL time gate in
+  // constrSensor().
+  // uint32_t lastSampleMs;   ///< Timestamp of the last temperature sample (ms)
   float lastTemp;          ///< Last accepted temperature value
   bool ready;              ///< true once the first sample produced a value
-  bool increase = false;   ///< direction of the last temperature change
+  // Unused (write-only): assigned in getTemp() but never read anywhere.
+  // bool increase = false;   ///< direction of the last temperature change
   // int corInt;          ///< Integer temperature correction offset
 
   /**

@@ -1,7 +1,7 @@
 #pragma once
 
 #include <stdint.h>
-#define EMA_K 4  ///< alpha = 1 / 2^EMA_K
+#define EMA_K 6 
 
 /**
  * @brief   A class for single-pole infinite impulse response filters
@@ -51,7 +51,21 @@ class EMA {
     return output;
   }
 
-  void setK(uint8_t k) { K = k; }
+  // Unused: setK was only called from changeEmaK(), which is disabled, so K
+  // always stays at the EMA_K default. Kept for reference.
+  // void setK(uint8_t k) { K = k; fixedPointAHalf = 1 << (K - 1);  }
+
+  /**
+   * @brief   Prime the filter so that the next output equals `value`.
+   *
+   *          Feeding the filter `2^K` samples (one time constant) only gets it
+   *          to ~63% of the input, so the warmup loop left a large startup
+   *          error.  Setting the integrator state directly makes the filtered
+   *          output start exactly at the current sample.
+   */
+  void reset(uint_t value) {
+    filtered = static_cast<uint_t>(value) << K;
+  }
 
   /**
    * @brief   Filter the input: Given @f$ x[n] @f$, calculate @f$ y[n] @f$.
@@ -61,7 +75,6 @@ class EMA {
    * @return  The new filtered output value.
    */
   uint_t operator()(uint_t value) { return filter(value); }
-
   static_assert(
       uint_t(0) < uint_t(-1),  // Check that `uint_t` is an unsigned type
       "Error: the uint_t type should be an unsigned integer, otherwise, "

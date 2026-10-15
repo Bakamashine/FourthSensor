@@ -13,19 +13,21 @@ void setFloatText(char *buf, size_t size, float v) {
   snprintf(buf, size, "%ld.%02ld", whole, frac);
 }
 
-void sort(float *array, size_t size) {
-  if (size < 2) return;
-
-  for (size_t a = 1; a < size; a++) {
-    for (size_t b = size - 1; b >= a; b--) {
-      if (array[b] < array[b - 1]) {
-        float t = array[b - 1];
-        array[b - 1] = array[b];
-        array[b] = t;
-      }
-    }
-  }
-}
+// Unused: no callers remain (the sensor averaging uses Float/IntegerGetAverage
+// instead). Kept for reference.
+// void sort(float *array, size_t size) {
+//   if (size < 2) return;
+//
+//   for (size_t a = 1; a < size; a++) {
+//     for (size_t b = size - 1; b >= a; b--) {
+//       if (array[b] < array[b - 1]) {
+//         float t = array[b - 1];
+//         array[b - 1] = array[b];
+//         array[b] = t;
+//       }
+//     }
+//   }
+// }
 
 float FloatGetAverageValue(float *arr, size_t size) {
   if (size == 0) return 0;

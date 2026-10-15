@@ -18,20 +18,26 @@
   (RESISTOR_FROM_SENSOR * static_cast<float>(value) / (MAX_ACP - value))
 #define RESISTOR_FROM_SENSOR 2000  // 2kOm
 #endif
-#define TEMP_INTERVAL 100  // ms between samples
+// Unused: sampling is no longer time-gated. constrSensor runs on every loop()
+// and the median/EMA filters smooth by sample count, so a fixed millisecond
+// gate only made the effective filter rate follow the loop timing (U8g2/Serial).
+// #define TEMP_INTERVAL 100  // ms between samples
 #define ADC_SAMPLES 8      // raw reads averaged into one sample
 
-#define PERM_DIF 150
+#define PERM_DIF 100
 #define SPIKE_LIMIT 3
 
 float getTempFromTable(Sensor *);
 
-static void changeEmaK() {
-  Sens::first.ema.setK(2);
-  Sens::second.ema.setK(4);
-  Sens::third.ema.setK(6);
-  Sens::fourth.ema.setK(7);
-}
+// Unused: per-sensor EMA tuning is not applied. Every sensor keeps the default
+// EMA_K, and the boot transient is now removed by a single ema.reset() instead
+// of lengthening/shortening the warmup per sensor.
+// static void changeEmaK() {
+//   Sens::first.ema.setK(2);
+//   Sens::second.ema.setK(4);
+//   Sens::third.ema.setK(6);
+//   Sens::fourth.ema.setK(7);
+// }
 
 int16_t ntcTempAt(size_t i) {
   return static_cast<int16_t>(pgm_read_word(&ntcTable[i].temp_c));
@@ -66,7 +72,7 @@ float getTemp(Sensor *sensor) {
   }
 
   if (average - sensor->lastTemp > hyst || sensor->lastTemp - average > hyst) {
-    sensor->increase = average > sensor->lastTemp;
+    // sensor->increase = average > sensor->lastTemp;  // unused (write-only)
     sensor->lastTemp = average;
   }
 
@@ -138,11 +144,15 @@ void sensorFilterInit(Sensor *sensor, uint8_t pin) {
 }
 
 void constrSensor(Sensor *sensor, uint8_t pin) {
-  uint32_t now = millis();
-  if (now - sensor->lastSampleMs < TEMP_INTERVAL) {
-    return;
-  }
-  sensor->lastSampleMs = now;
+  // Disabled time gate. It throttled each sensor to one sample per
+  // TEMP_INTERVAL, but the median/EMA filters already smooth by sample count;
+  // the gate only coupled the filter rate to loop timing. Sampling every loop
+  // keeps the filters deterministic, so lastSampleMs/TEMP_INTERVAL are unused.
+  // uint32_t now = millis();
+  // if (now - sensor->lastSampleMs < TEMP_INTERVAL) {
+  //   return;
+  // }
+  // sensor->lastSampleMs = now;
 
   uint32_t sum = 0;
   for (uint8_t i = 0; i < ADC_SAMPLES; i++) sum += analogRead(pin);
@@ -166,7 +176,7 @@ void constrSensor(Sensor *sensor, uint8_t pin) {
         MEDIANFILTER_Insert(&sensor->median, acp);
 #endif
 #ifdef EMA_FILTER
-    for (uint16_t i = 0; i < (1u << EMA_K); i++) sensor->ema.filter(acp);
+    sensor->ema.reset(acp);
 #endif
     sensor->filterReady = true;
   }
