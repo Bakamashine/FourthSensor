@@ -28,11 +28,13 @@ struct SensorSettings {
   int coolBorder = 0;
 };
 struct Sensor {
-  int acp;           ///< ADC count (0-1023) after the acp filters
+  unsigned int acp;           ///< ADC count (0-1023) after the acp filters
   int lastAcp = -1;  ///< Last accepted raw ADC, -1 until the first reading
   uint8_t spikeCount = 0;  ///< Consecutive samples rejected as glitches
   float temp;              ///< Calculated temperature in degrees Celsius
+  #if TEMP_CALCULATION_VARIANT == VIA_RESISTANCE
   float resist;            ///< Calculated sensor resistance in ohms
+  #endif
   uint8_t pin;             ///< Analog pin the sensor is connected to
   uint32_t lastSampleMs;   ///< Timestamp of the last temperature sample (ms)
   float lastTemp;          ///< Last accepted temperature value
@@ -76,7 +78,14 @@ void sensorSetup();
 void DS18Setup();
 
 int16_t ntcTempAt(size_t i);
-int32_t ntcResAt(size_t i);
+
+// if calculation working via resistance, then type is uint32_t, overwise is
+// uint16_t
+#if TEMP_CALCULATION_VARIANT == RESISTOR_FROM_SENSOR
+uint32_t ntcResAt(size_t i);
+#else
+uint16_t ntcAcpAt(size_t i);
+#endif
 
 int getIAverageTemp(Sensors *sens);
 float getFAverageTemp(Sensors *sens);

@@ -12,10 +12,12 @@
 #include "settings.hpp"
 
 #define MAX_ACP 1023
-#define RESISTOR_FROM_SENSOR 2000  // 2kOm
 
+#if TEMP_CALCULATION_VARIANT == VIA_RESISTANCE
 #define GET_RES(value) \
   (RESISTOR_FROM_SENSOR * static_cast<float>(value) / (MAX_ACP - value))
+#define RESISTOR_FROM_SENSOR 2000  // 2kOm
+#endif
 #define TEMP_INTERVAL 100  // ms between samples
 #define ADC_SAMPLES 8      // raw reads averaged into one sample
 
@@ -34,9 +36,16 @@ static void changeEmaK() {
 int16_t ntcTempAt(size_t i) {
   return static_cast<int16_t>(pgm_read_word(&ntcTable[i].temp_c));
 }
-int32_t ntcResAt(size_t i) {
-  return static_cast<int32_t>(pgm_read_dword(&ntcTable[i].resistance));
+
+#if TEMP_CALCULATION_VARIANT == VIA_RESISTANCE
+uint32_t ntcResAt(size_t i) {
+  return static_cast<uint32_t>(pgm_read_dword(&ntcTable[i].resistance));
 }
+#else
+uint16_t ntcAcpAt(size_t i) {
+  return static_cast<uint16_t>(pgm_read_word(&ntcTable[i].acp));
+}
+#endif
 
 static float returnTempWithCorInt(float temp, Sensor *sensor) {
   if (sensor->settings.highBorder + hyst > temp)
@@ -65,30 +74,57 @@ float getTemp(Sensor *sensor) {
 }
 
 float getTempFromTable(Sensor *sensor) {
+#if TEMP_CALCULATION_VARIANT == VIA_RESISTANCE
   int acp = sensor->acp;
   if (acp >= MAX_ACP) acp = MAX_ACP - 1;
   if (acp <= 0) acp = 1;
-
   sensor->resist = GET_RES(acp);
 
-  // get max or min value
-  if (sensor->resist >= ntcResAt(0)) return static_cast<float>(ntcTempAt(0));
-  if (sensor->resist <= ntcResAt(NTC_TABLE_SIZE - 1))
+  // clamp to the table ends
+  if (sensor->resist >= static_cast<float>(ntcResAt(0)))
+    return static_cast<float>(ntcTempAt(0));
+  if (sensor->resist <= static_cast<float>(ntcResAt(NTC_TABLE_SIZE - 1)))
     return static_cast<float>(ntcTempAt(NTC_TABLE_SIZE - 1));
 
   for (size_t i = 0; i + 1 < NTC_TABLE_SIZE; i++) {
-    int16_t temp = ntcTempAt(i);
-    int32_t res = ntcResAt(i);
+    if (sensor->resist > static_cast<float>(ntcResAt(i))) continue;
+    if (sensor->resist < static_cast<float>(ntcResAt(i + 1))) continue;
 
-    if (sensor->resist > res) continue;
-    if (sensor->resist < ntcResAt(i + 1)) continue;
+    int32_t r1 = static_cast<int32_t>(ntcResAt(i));
+    int32_t r2 = static_cast<int32_t>(ntcResAt(i + 1));
+    int16_t t1 = ntcTempAt(i);
+    int16_t t2 = ntcTempAt(i + 1);
 
-    // interpolate between the two bracketing table rows
-    float fraction =
-        static_cast<float>(res - sensor->resist) / (res - ntcResAt(i + 1));
-    return static_cast<float>(temp) +
-           fraction * static_cast<float>(ntcTempAt(i + 1) - temp);
+    // T(x) = t1 + (x - r1) * k
+    float k = static_cast<float>(t2 - t1) / static_cast<float>(r2 - r1);
+    return static_cast<float>(t1) +
+           (sensor->resist - static_cast<float>(r1)) * k;
   }
+#else
+  if (sensor->acp >= ntcAcpAt(0)) return static_cast<float>(ntcTempAt(0));
+  if (sensor->acp <= ntcAcpAt(NTC_TABLE_SIZE - 1))
+    return static_cast<float>(ntcTempAt(NTC_TABLE_SIZE - 1));
+  for (size_t i = 0; i + 1 < NTC_TABLE_SIZE; i++) {
+    // int16_t temp = ntcTempAt(i);
+    if (sensor->acp > ntcAcpAt(i)) continue;
+    if (sensor->acp < ntcAcpAt(i + 1)) continue;
+    // y = k*x+b
+    // k = (y2 - y1)/(x2-x1)
+    // b = acp?
+    //
+
+    int32_t a1 = ntcAcpAt(i);
+    int32_t a2 = ntcAcpAt(i + 1);
+    int16_t t1 = ntcTempAt(i);
+    int16_t t2 = ntcTempAt(i + 1);
+
+    // T(x) = t1 + (x - a1) * k
+    float k = static_cast<float>(t2 - t1) / static_cast<float>(a2 - a1);
+    return static_cast<float>(t1) +
+           (static_cast<int32_t>(sensor->acp) - a1) * k;
+  }
+#endif
+
   return 0.0F;
 }
 
