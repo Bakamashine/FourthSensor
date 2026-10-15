@@ -23,9 +23,6 @@ int systemHalted = 0;
 #endif
 
 void debugPrint() {
-#ifdef DS18_SENSOR
-  auto ds18Temp = readFromDS18();
-#endif
   Serial.println("=====DEBUG INPUT====");
   // acp
   PRINT_DEBUG("[ACP] s_first: ", Sens::first.acp);
@@ -39,7 +36,7 @@ void debugPrint() {
   PRINT_DEBUG("[TEMP] s_third: ", Sens::third.temp);
   PRINT_DEBUG("[TEMP] s_fourth: ", Sens::fourth.temp);
 #ifdef DS18_SENSOR
-  PRINT_DEBUG("[TEMP] DS18: ", ds18Temp);
+  PRINT_DEBUG("[TEMP] DS18: ", Sens::ds18Temp);
 #endif
 
   // correct integer
@@ -114,6 +111,9 @@ void loop() {
 #endif
   sensorsLoop();
 
+#ifdef DS18_SENSOR
+  readFromDS18();
+#endif
 #ifdef DEBUG
   debugPrint();
 #endif
