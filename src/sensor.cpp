@@ -2,7 +2,9 @@
 
 #include <Arduino.h>
 #include <EEPROM.h>
+#ifdef DS18_SENSOR
 #include <GyverDS18Single.h>
+#endif
 
 #include "constants/addr_eeprom.hpp"
 #include "constants/ntcPoint.hpp"
@@ -14,9 +16,9 @@
 #define MAX_ACP 1023
 
 #if TEMP_CALCULATION_VARIANT == VIA_RESISTANCE
+#define RESISTOR_FROM_SENSOR 2000  // 2kOm
 #define GET_RES(value) \
   (RESISTOR_FROM_SENSOR * static_cast<float>(value) / (MAX_ACP - value))
-#define RESISTOR_FROM_SENSOR 2000  // 2kOm
 #endif
 
 #define ADC_SAMPLES 8  // raw reads averaged into one sample
@@ -37,15 +39,21 @@ int16_t ntcTempAt(size_t i) {
   return static_cast<int16_t>(pgm_read_word(&ntcTable[i].temp_c));
 }
 
-#if TEMP_CALCULATION_VARIANT == VIA_RESISTANCE
-uint32_t ntcResAt(size_t i) {
-  return static_cast<uint32_t>(pgm_read_dword(&ntcTable[i].resistance));
+// #if TEMP_CALCULATION_VARIANT == VIA_RESISTANCE
+// NTCLIST_VA_TYPE ntcValAt(size_t i) {
+//   return static_cast<NTCLIST_VA_TYPE>(pgm_read_dword(&ntcTable[i].value));
+// }
+// #else
+// NTCLIST_VA_TYPE ntcValAt(size_t i) {
+//   return static_cast<NTCLIST_VA_TYPE>(pgm_read_word(&ntcTable[i].value));
+// }
+// #endif
+
+NTCLIST_VA_TYPE ntcValAt(size_t i) {
+  NTCLIST_VA_TYPE v;
+  memcpy_P(&v, &ntcTable[i].value, sizeof(v));
+  return v;
 }
-#else
-uint16_t ntcAcpAt(size_t i) {
-  return static_cast<uint16_t>(pgm_read_word(&ntcTable[i].acp));
-}
-#endif
 
 static float returnTempWithCorInt(float temp, Sensor *sensor) {
   // if (sensor->settings.highBorder + hyst > temp)
@@ -77,57 +85,29 @@ float getTemp(Sensor *sensor) {
 
 float getTempFromTable(Sensor *sensor) {
 #if TEMP_CALCULATION_VARIANT == VIA_RESISTANCE
-  int acp = sensor->acp;
-  if (acp >= MAX_ACP) acp = MAX_ACP - 1;
-  if (acp <= 0) acp = 1;
-  sensor->resist = GET_RES(acp);
-
-  // clamp to the table ends
-  if (sensor->resist >= static_cast<float>(ntcResAt(0)))
-    return static_cast<float>(ntcTempAt(0));
-  if (sensor->resist <= static_cast<float>(ntcResAt(NTC_TABLE_SIZE - 1)))
-    return static_cast<float>(ntcTempAt(NTC_TABLE_SIZE - 1));
-
-  for (size_t i = 0; i + 1 < NTC_TABLE_SIZE; i++) {
-    if (sensor->resist > static_cast<float>(ntcResAt(i))) continue;
-    if (sensor->resist < static_cast<float>(ntcResAt(i + 1))) continue;
-
-    int32_t r1 = static_cast<int32_t>(ntcResAt(i));
-    int32_t r2 = static_cast<int32_t>(ntcResAt(i + 1));
-    int16_t t1 = ntcTempAt(i);
-    int16_t t2 = ntcTempAt(i + 1);
-
-    // T(x) = t1 + (x - r1) * k
-    float k = static_cast<float>(t2 - t1) / static_cast<float>(r2 - r1);
-    return static_cast<float>(t1) +
-           (sensor->resist - static_cast<float>(r1)) * k;
-  }
+  NTCLIST_VA_TYPE val = static_cast<NTCLIST_VA_TYPE>(sensor->resist);
 #else
-  if (sensor->acp >= ntcAcpAt(0)) return static_cast<float>(ntcTempAt(0));
-  if (sensor->acp <= ntcAcpAt(NTC_TABLE_SIZE - 1))
-    return static_cast<float>(ntcTempAt(NTC_TABLE_SIZE - 1));
-  for (size_t i = 0; i + 1 < NTC_TABLE_SIZE; i++) {
-    // int16_t temp = ntcTempAt(i);
-    if (sensor->acp > ntcAcpAt(i)) continue;
-    if (sensor->acp < ntcAcpAt(i + 1)) continue;
-    // y = k*x+b
-    // k = (y2 - y1)/(x2-x1)
-    // b = acp?
-    //
-
-    int32_t a1 = ntcAcpAt(i);
-    int32_t a2 = ntcAcpAt(i + 1);
-    int16_t t1 = ntcTempAt(i);
-    int16_t t2 = ntcTempAt(i + 1);
-
-    // T(x) = t1 + (x - a1) * k
-    float k = static_cast<float>(t2 - t1) / static_cast<float>(a2 - a1);
-    return static_cast<float>(t1) +
-           (static_cast<int32_t>(sensor->acp) - a1) * k;
-  }
+  NTCLIST_VA_TYPE val = static_cast<NTCLIST_VA_TYPE>(sensor->acp);
 #endif
 
-  return 0.0F;
+  int idx = ntcBinarySearchArray(val);
+  if (idx == -1) return static_cast<float>(ntcTempAt(0));
+  if (idx == -2) return static_cast<float>(ntcTempAt(NTC_TABLE_SIZE - 1));
+
+  int32_t v1 = static_cast<int32_t>(ntcValAt(idx));
+  int32_t v2 = static_cast<int32_t>(ntcValAt(idx + 1));
+  int16_t t1 = ntcTempAt(idx);
+  int16_t t2 = ntcTempAt(idx + 1);
+
+  int32_t dv = v2 - v1;
+  if (dv == 0) return static_cast<float>(t1);
+
+  int32_t dx = static_cast<int32_t>(val) - v1;
+
+  // T = t1 + (t2 - t1) * dx / dv
+  int32_t num = (static_cast<int32_t>(t2 - t1) * 10) * dx;
+  int32_t t_x10 = static_cast<int32_t>(t1) * 10 + (num + dv / 2) / dv;
+  return t_x10 * 0.1F;
 }
 
 void sensorFilterInit(Sensor *sensor, uint8_t pin) {
@@ -189,6 +169,14 @@ void constrSensor(Sensor *sensor, uint8_t pin) {
 #else
   sensor->acp = acp;
 #endif
+
+#if TEMP_CALCULATION_VARIANT == VIA_RESISTANCE
+  float adc = static_cast<float>(sensor->acp);
+  if (adc >= MAX_ACP) adc = MAX_ACP - 1;
+  if (adc < 0) adc = 0;
+  sensor->resist = GET_RES(adc);
+#endif
+
   sensor->temp = getTemp(sensor);
 }
 

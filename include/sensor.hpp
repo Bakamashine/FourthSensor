@@ -80,14 +80,7 @@ void sensorSetup();
 void DS18Setup();
 
 int16_t ntcTempAt(size_t i);
-
-// if calculation working via resistance, then type is uint32_t, overwise is
-// uint16_t
-#if TEMP_CALCULATION_VARIANT == RESISTOR_FROM_SENSOR
-uint32_t ntcResAt(size_t i);
-#else
-uint16_t ntcAcpAt(size_t i);
-#endif
+NTCLIST_VA_TYPE ntcValAt(size_t i);
 
 int getIAverageTemp(Sensors *sens);
 float getFAverageTemp(Sensors *sens);

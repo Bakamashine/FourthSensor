@@ -4,13 +4,16 @@
 #include "avr/pgmspace.h"
 #include "constants/settings.hpp"
 
+#if TEMP_CALCULATION_VARIANT == VIA_RESISTANCE
+
+// the type for  second variable
+#define NTCLIST_VA_TYPE uint32_t
+#else
+#define NTCLIST_VA_TYPE uint16_t
+#endif
 struct NtcPoint {
   int16_t temp_c;
-#if TEMP_CALCULATION_VARIANT == VIA_RESISTANCE
-  uint32_t resistance;
-#else
-  uint16_t acp;
-#endif
+  NTCLIST_VA_TYPE value;
 };
 
 #if TEMP_CALCULATION_VARIANT == VIA_RESISTANCE

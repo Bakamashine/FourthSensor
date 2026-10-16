@@ -1,5 +1,7 @@
 #include <Arduino.h>
 #include <U8g2lib.h>
+#include <Wire.h>
+#include <avr/wdt.h>
 
 #include "OneButtonTiny.h"
 #include "button_callbacks.hpp"
@@ -18,8 +20,6 @@ void handleCommand();
 #endif
 #ifdef ENABLE_VALIDATE
 #include "validate.hpp"
-void haltSystem() {}
-int systemHalted = 0;
 #endif
 #ifdef ENABLE_BURNER
 #include "burner.hpp"
@@ -86,7 +86,8 @@ void debugPrint() {
 
   PRINT_DEBUG("[SETTINGS_H] Hysteresis: ", hyst);
   PRINT_DEBUG("[MENU_UI_H] isValueOpen: ", isDeepMenuOpen);
-  PRINT_DEBUG("[MENU_UI_H] _selected: ", _baseMenuSelected);
+  PRINT_DEBUG("[MENU_UI_H] _baseMenuSelected: ", _baseMenuSelected);
+  PRINT_DEBUG("[MENU_UI_H] _deepMenuSelected: ", _deepMenuSelected);
   PRINT_DEBUG("[PAGE_H] currentPage: ", currentPage);
 #ifdef ENABLE_VALIDATE
   PRINT_DEBUG("[ERROR_H] errorCode: ", Validate::errorCode);
@@ -96,7 +97,9 @@ void debugPrint() {
 }
 
 void setup() {
+  wdt_disable();  // bootloader may leave the WDT armed
   Serial.begin(9600);
+  Wire.setWireTimeout(3000, true);
   UI::u8g2.begin();
 
   sensorSetup();
@@ -105,9 +108,11 @@ void setup() {
   ledSetup();
 #endif
   readFromEEPROM();
+  wdt_enable(WDTO_4S);
 }
 
 void loop() {
+  wdt_reset();
   btnTick();
 #ifdef LED_DEBUG
   ledDebug();
@@ -129,7 +134,7 @@ void loop() {
 #ifdef ENABLE_VALIDATE
   // validate
   Validate::pipeline(&Sens::all);
-  if (Validate::errorCode > 0) haltSystem();
+  if (Validate::errorCode > 0) Validate::haltSystem();
 #endif
 
 #ifdef ENABLE_BURNER
