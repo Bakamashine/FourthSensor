@@ -211,19 +211,6 @@ static void changeDeepValue(int delta) {
     else if (item.write_func != nullptr)
       item.write_func(*static_cast<int *>(item.target)+INT_SUMMAND);
   }
-  // if (item.kind == DEEP_FLOAT) {
-  //   float *p = static_cast<float *>(item.target);
-  //   float next = *p + static_cast<float>(delta) * item.step;
-  //   if (next < item.min) next = item.min;
-  //   if (next > item.max) next = item.max;
-  //   *p = next;
-  // } else {
-  //   int *p = static_cast<int *>(item.target);
-  //   long next = static_cast<long>(*p) + delta;
-  //   if (next < static_cast<long>(item.min)) next =
-  //   static_cast<long>(item.min); if (next > static_cast<long>(item.max)) next
-  //   = static_cast<long>(item.max); *p = static_cast<int>(next);
-  // }
 }
 
 void menuPageIncreaseValue() { changeDeepValue(1); }
