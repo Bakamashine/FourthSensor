@@ -38,7 +38,6 @@ void mainPage(U8G2 *display, Sensors *sensors) {
                    sensors->_s_fourth->acp, display);
 
 #ifdef DS18_SENSOR
-  // DS18 sensor: temperature only, so it goes into the temperature column
   char ds18Buf[10];
   dtostrf(Sens::ds18Temp, 0, 2, ds18Buf);
   RAW_WRITE_ROW(U8G2_MAIN_ROW(5), PREVIEW_DS18, nullptr, ds18Buf, display);
@@ -48,16 +47,14 @@ void mainPage(U8G2 *display, Sensors *sensors) {
 void draw() {
   u8g2.firstPage();
   do {
-    u8g2.setFont(u8g2_font_ncenB08_tr);
+    u8g2.setFont(FONT);
     switch (currentPage) {
       case MAIN:
         mainPage(&u8g2, &Sens::all);
         break;
       case SETTINGS:
         menuPage(&u8g2, &Sens::all);
-
         break;
-
 #ifdef ENABLE_VALIDATE
       case ERROR:
         errorPage(&u8g2, Validate::errorCode);

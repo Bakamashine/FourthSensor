@@ -13,24 +13,38 @@ int checkSensors(Sensors *sn) {
   /*
   codes:
   100 - all sensors agree
-  101 - main sensor is defective
-  102 - first reserve sensor is defective
-  103 - second reserve sensor is defective
+  101 - first sensor is defective
+  102 - second sensor is defective
+  103 - third sensor is defective
+  104 - fourth sensor is defective
 
   */
-  if (sn->_s_second->temp + PERMITTED_TEMP_DIFFERENCE <= sn->_s_first->temp ||
-      sn->_s_third->temp + PERMITTED_TEMP_DIFFERENCE <= sn->_s_first->temp) {
-    return 101;
-  }
-  if (sn->_s_first->temp + PERMITTED_TEMP_DIFFERENCE <= sn->_s_second->temp ||
-      sn->_s_third->temp + PERMITTED_TEMP_DIFFERENCE <= sn->_s_second->temp) {
-    return 102;
-  }
-  if (sn->_s_first->temp + PERMITTED_TEMP_DIFFERENCE <= sn->_s_third->temp ||
-      sn->_s_second->temp + PERMITTED_TEMP_DIFFERENCE <= sn->_s_third->temp) {
-    return 103;
-  }
-
+  // if (sn->_s_second->temp + PERMITTED_TEMP_DIFFERENCE <= sn->_s_first->temp
+  // ||
+  //     sn->_s_third->temp + PERMITTED_TEMP_DIFFERENCE <= sn->_s_first->temp ||
+  //     sn->_s_fourth->temp + PERMITTED_TEMP_DIFFERENCE <= sn->_s_first->temp)
+  //     {
+  //   return 101;
+  // }
+  // if (sn->_s_first->temp + PERMITTED_TEMP_DIFFERENCE <= sn->_s_second->temp
+  // ||
+  //     sn->_s_third->temp + PERMITTED_TEMP_DIFFERENCE <= sn->_s_second->temp
+  //     || sn->_s_fourth->temp + PERMITTED_TEMP_DIFFERENCE <=
+  //     sn->_s_second->temp) {
+  //   return 102;
+  // }
+  // if (sn->_s_first->temp + PERMITTED_TEMP_DIFFERENCE <= sn->_s_third->temp ||
+  //     sn->_s_second->temp + PERMITTED_TEMP_DIFFERENCE <= sn->_s_third->temp
+  //     || sn->_s_fourth->temp + PERMITTED_TEMP_DIFFERENCE <=
+  //     sn->_s_fourth->temp) {
+  //   return 103;
+  // }
+  // if (sn->_s_first->temp + PERMITTED_TEMP_DIFFERENCE <= sn->_s_fourth->temp
+  // ||
+  //     sn->_s_second->temp + PERMITTED_TEMP_DIFFERENCE <= sn->_s_fourth->temp
+  //     || sn->_s_third->temp + PERMITTED_TEMP_DIFFERENCE <=
+  //     sn->_s_fourth->temp)
+  //   return 104;
   return 0;  // no error
 }
 
@@ -50,9 +64,8 @@ int checkTemperature(Sensors *sn) {
   return 0;  // no error
 }
 void pipeline(Sensors *sn) {
-  // until every sensor has finished its first ATTEMPTS cycle its temp is 0,
-  // which would be reported as "too cold"
-  if (!sn->_s_first->ready || !sn->_s_second->ready || !sn->_s_third->ready)
+  if (!sn->_s_first->ready || !sn->_s_second->ready || !sn->_s_third->ready ||
+      !sn->_s_fourth->ready)
     return;
 
   int sensor_code = checkSensors(sn);
@@ -68,7 +81,8 @@ void pipeline(Sensors *sn) {
 
 void haltSystem() {
   if (!systemHalted) {
-    Serial.println("ERROR");
+    Serial.print("ERROR: ");
+    Serial.println(errorCode);
     digitalWrite(BURNER_PIN, LOW);
     digitalWrite(ERROR_PIN, HIGH);
     Burner::status = 0;

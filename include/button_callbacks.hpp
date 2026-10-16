@@ -4,9 +4,9 @@
 #include "constants/pin.hpp"
 
 namespace Btn {
-inline OneButtonTiny *plus = nullptr;
-inline OneButtonTiny *minus = nullptr;
-inline OneButtonTiny *menu = nullptr;
+extern OneButtonTiny plus;
+extern OneButtonTiny minus;
+extern OneButtonTiny menu;
 }  // namespace Btn
 
 void btnSetup();
@@ -17,4 +17,3 @@ void btnMinusLongPress();
 void btnMenuOnClick();
 void btnMenuLongPress();
 void btnTick();
-void deleteButtons();

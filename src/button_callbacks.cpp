@@ -4,26 +4,25 @@
 #include "page.hpp"
 #include "ui/menu.hpp"
 
-void btnSetup() {
-  Btn::plus = new OneButtonTiny(PLUS_BTN_PIN);
-  Btn::minus = new OneButtonTiny(MINUS_BTN_PIN);
-  Btn::menu = new OneButtonTiny(MENU_BTN_PIN);
-  const int debounce = 20;
-  auto mode = INPUT_PULLUP;
-  pinMode(MENU_BTN_PIN, mode);
-  pinMode(PLUS_BTN_PIN, mode);
-  pinMode(MINUS_BTN_PIN, mode);
+namespace Btn {
+OneButtonTiny plus(PLUS_BTN_PIN);
+OneButtonTiny minus(MINUS_BTN_PIN);
+OneButtonTiny menu(MENU_BTN_PIN);
+}  // namespace Btn
 
-  Btn::menu->setDebounceMs(debounce);
-  Btn::plus->setDebounceMs(debounce);
-  Btn::minus->setDebounceMs(debounce);
+void btnSetup() {
+  const int debounce = 20;
+
+  Btn::menu.setDebounceMs(debounce);
+  Btn::plus.setDebounceMs(debounce);
+  Btn::minus.setDebounceMs(debounce);
 
   // Btn::menu.attachClick (btnMenuOnClick);
-  Btn::menu->attachLongPressStart(btnMenuLongPress);
-  Btn::plus->attachClick(btnPlusOneClick);
-  Btn::plus->attachLongPressStart(btnPlusLongPress);
-  Btn::minus->attachClick(btnMinusOneClick);
-  Btn::minus->attachLongPressStart(btnMinusLongPress);
+  Btn::menu.attachLongPressStart(btnMenuLongPress);
+  Btn::plus.attachClick(btnPlusOneClick);
+  Btn::plus.attachLongPressStart(btnPlusLongPress);
+  Btn::minus.attachClick(btnMinusOneClick);
+  Btn::minus.attachLongPressStart(btnMinusLongPress);
 }
 
 void btnMenuOnClick() {
@@ -36,15 +35,9 @@ void btnMenuOnClick() {
 }
 
 void btnTick() {
-  Btn::menu->tick();
-  Btn::plus->tick();
-  Btn::minus->tick();
-}
-
-void deleteButtons() {
-  delete Btn::menu;
-  delete Btn::plus;
-  delete Btn::minus;
+  Btn::menu.tick();
+  Btn::plus.tick();
+  Btn::minus.tick();
 }
 
 void btnPlusLongPress() {

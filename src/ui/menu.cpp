@@ -19,6 +19,10 @@
 #define MENU_ITEMS_COUNT 5
 #define MAX_DEEP_ITEMS 4
 
+#define INT_SUMMAND  1
+#define F_SUMMAND 0.01F
+
+
 struct MenuItem {
   int row;
   int marker;
@@ -34,6 +38,8 @@ struct DeepMenuItem {
   void *target;
   DeepValueKind kind;
   float step;
+  void (*fwrite_func)(float);
+  void (*write_func)(int);
   float min;
   float max;
 };
@@ -73,6 +79,8 @@ static void buildSensorDeepMenu(Sensor *sensor) {
                        .target = &sensor->settings.ema_k,
                        .kind = DEEP_INT,
                        .step = 1,
+                       .fwrite_func = nullptr,
+                       .write_func = nullptr,
                        .min = 1,
                        .max = 10};
 }
@@ -84,6 +92,8 @@ static void buildOtherDeepMenu() {
                            .target = &hyst,
                            .kind = DEEP_FLOAT,
                            .step = HYST_STEP,
+                           .fwrite_func = _EEPROM::writeHyst,
+                           .write_func = nullptr,
                            .min = HYST_MIN,
                            .max = HYST_MAX};
   count++;
@@ -93,6 +103,8 @@ static void buildOtherDeepMenu() {
                            .target = &maxPermOffset,
                            .kind = DEEP_INT,
                            .step = 1,
+                           .fwrite_func = nullptr,
+                           .write_func = _EEPROM::writeMaxPermOffset,
                            .min = static_cast<float>(minPermOffset),
                            .max = OFFSET_MAX};
   count++;
@@ -101,6 +113,8 @@ static void buildOtherDeepMenu() {
                            .target = &minPermOffset,
                            .kind = DEEP_INT,
                            .step = 1,
+                           .fwrite_func = nullptr,
+                           .write_func = _EEPROM::writeMinPermOffset,
                            .min = OFFSET_MIN,
                            .max = static_cast<float>(maxPermOffset)};
   count++;
@@ -110,6 +124,8 @@ static void buildOtherDeepMenu() {
                            .target = &uTemp,
                            .kind = DEEP_INT,
                            .step = 1,
+                           .fwrite_func = nullptr,
+                           .write_func = _EEPROM::writeUserTemp,
                            .min = UTEMP_MIN,
                            .max = UTEMP_MAX};
   count++;
@@ -120,7 +136,7 @@ static void formatDeepValue(const DeepMenuItem &item, char *buf, size_t size) {
   if (item.kind == DEEP_FLOAT) {
     dtostrf(*static_cast<float *>(item.target), 0, 2, buf);
   } else {
-    snprintf(buf, size, "%d", *static_cast<int *>(item.target));
+    itoa(*static_cast<int *>(item.target), buf, 10);
   }
 }
 
@@ -138,19 +154,6 @@ static void drawDeepMenu(U8G2 *display) {
 #endif
 
 #ifdef ENABLE_SETTINGS
-
-/// one decimal digit only when it is not zero: the right half of the menu
-/// has ~45 px per cell and AVR has no float printf
-// static void setStepText(char *buf, size_t size, float v) {
-//   long scaled = static_cast<long>(v * 100.0F + (v < 0.0F ? -0.05F : 0.05F));
-//   long frac = scaled % 100;
-//   if (frac < 0) frac = -frac;
-
-//   if (frac == 0)
-//     snprintf(buf, size, "%ld", scaled / 100);
-//   else
-//     snprintf(buf, size, "%ld.%02ld", scaled / 100, frac);
-// }
 
 static void drawItems(U8G2 *display) {
   for (int i = 0; i < MENU_ITEMS_COUNT; i++) {
@@ -190,42 +193,37 @@ void menuPage(U8G2 *display, Sensors *sensors) {
 #endif
 }
 
-// static void changeSelected(int delta) {
-//   if (_selected < 0 || _selected >= MENU_ITEMS_COUNT) return;
-
-//   const MenuItem &item = _items[_selected];
-
-//   if (item.value != nullptr) {
-//     int next = *item.value + delta;
-//     if (next < item.min) next = item.min;
-//     if (next > item.max) next = item.max;
-//     *item.value = next;
-//   } else if (item.fvalue != nullptr) {
-//     float next = *item.fvalue + static_cast<float>(delta) * item.step;
-//     if (next < static_cast<float>(item.min))
-//       next = static_cast<float>(item.min);
-//     if (next > static_cast<float>(item.max))
-//       next = static_cast<float>(item.max);
-//     *item.fvalue = next;
-//   }
-// }
-
 static void changeDeepValue(int delta) {
   if (_deepMenuSelected < 0 || _deepMenuSelected >= _deepMenuCount) return;
   DeepMenuItem &item = _deepMenuItems[_deepMenuSelected];
-  if (item.kind == DEEP_FLOAT) {
-    float *p = static_cast<float *>(item.target);
-    float next = *p + static_cast<float>(delta) * item.step;
-    if (next < item.min) next = item.min;
-    if (next > item.max) next = item.max;
-    *p = next;
-  } else {
-    int *p = static_cast<int *>(item.target);
-    long next = static_cast<long>(*p) + delta;
-    if (next < static_cast<long>(item.min)) next = static_cast<long>(item.min);
-    if (next > static_cast<long>(item.max)) next = static_cast<long>(item.max);
-    *p = static_cast<int>(next);
+  
+  // decrease
+  if (delta < 0) {
+    if (item.fwrite_func != nullptr)
+      item.fwrite_func(*static_cast<float *>(item.target)-F_SUMMAND);
+    else if (item.write_func != nullptr)
+      item.write_func(*static_cast<int *>(item.target)-INT_SUMMAND);
   }
+  // increase
+  else if (delta > 0) {
+    if (item.fwrite_func != nullptr)
+      item.fwrite_func(*static_cast<float *>(item.target)+F_SUMMAND);
+    else if (item.write_func != nullptr)
+      item.write_func(*static_cast<int *>(item.target)+INT_SUMMAND);
+  }
+  // if (item.kind == DEEP_FLOAT) {
+  //   float *p = static_cast<float *>(item.target);
+  //   float next = *p + static_cast<float>(delta) * item.step;
+  //   if (next < item.min) next = item.min;
+  //   if (next > item.max) next = item.max;
+  //   *p = next;
+  // } else {
+  //   int *p = static_cast<int *>(item.target);
+  //   long next = static_cast<long>(*p) + delta;
+  //   if (next < static_cast<long>(item.min)) next =
+  //   static_cast<long>(item.min); if (next > static_cast<long>(item.max)) next
+  //   = static_cast<long>(item.max); *p = static_cast<int>(next);
+  // }
 }
 
 void menuPageIncreaseValue() { changeDeepValue(1); }

@@ -1,5 +1,7 @@
 #include "command.hpp"
 
+#ifdef ENABLE_COMMANDS
+
 #include <Arduino.h>
 #include <string.h>
 
@@ -38,23 +40,15 @@
 const char *_firstSlice;
 const char *_secondSlice;
 
-size_t getCmdBufSize() { return CMD_BUF_SIZE; }
-
 void help() {
   Serial.println(F("ALL COMMANDS:"));
   Serial.println(F("help              - show this list"));
   Serial.println(F("hyst=<float>      - set burner hysteresis"));
-  Serial.println(F(""));
-  Serial.println(F("per sensor N (1..4), e.g. hcs1=<int>"));
-  Serial.println(F("hcsN=<int>        - high temperature correction"));
-  Serial.println(F("ccsN=<int>        - cool temperature correction"));
-  Serial.println(F("dcsN=<int>        - default temperature correction"));
-  Serial.println(F("hbN=<int>         - high temperature border"));
-  Serial.println(F("cbN=<int>         - cool temperature border"));
+  Serial.println(F("esN=<int>         - set sensor N (1..4) ema_k"));
 #ifdef ENABLE_VALIDATE
   Serial.println(F("max=<int>         - set max permitted offset"));
   Serial.println(F("min=<int>         - set min permitted offset"));
-  // Serial.println(F("ut=<int>          - set user temperature"));
+  Serial.println(F("ut=<int>          - set user temperature"));
 #endif
   Serial.println(F("<other>=<int>     - not a command; try 'help'"));
 }
@@ -78,83 +72,43 @@ void runCmd(char *cmd, Sensors *sensors) {
   int second_slice_value = atoi(_secondSlice);
   if (strcmp(_firstSlice, "hyst") == 0) {
     hyst = atof(_secondSlice);
-    writeHystToEEPROM(hyst, -1);
+    _EEPROM::writeHyst(hyst);
 #ifdef DEBUG_COMMAND
     Serial.println("RUN    hyst applied");
 #endif
   }
   /**
-   * example command: hcs1=<int>, ccs=<int>
-   * Params:
-   * First: h = high, c - cool
-   * Second: c - correct int, b - border
-   * Third: s - sensor
-   * Fourth: <int> - number sensor
+   * example command: es1=<int>, es2=<int>
+   * First: e - ema
+   * Second: s - setting
+   * Third: <int> - number sensor
    */
 
-  // SENSOR_SETTINGS_CMD("hcs1", sensors->_s_first, highCorInt,
-  //                     ADDR_SENS1_SETTINGS, "RUN hcs applied")
-  // SENSOR_SETTINGS_CMD("ccs1", sensors->_s_first, coolCorInt,
-  //                     ADDR_SENS1_SETTINGS, "RUN ccs applied")
-  // SENSOR_SETTINGS_CMD("hb1", sensors->_s_first, highBorder,
-  // ADDR_SENS1_SETTINGS,
-  //                     "RUN bh1 applied")
-  // SENSOR_SETTINGS_CMD("cb1", sensors->_s_first, coolBorder,
-  // ADDR_SENS1_SETTINGS,
-  //                     "RUN cb1 applied")
-  // SENSOR_SETTINGS_CMD("dcs1", sensors->_s_first, defaultCorInt,
-  //                     ADDR_SENS1_SETTINGS, "RUN dcs1 applied")
-
-  // SENSOR_SETTINGS_CMD("hcs2", sensors->_s_second, highCorInt,
-  //                     ADDR_SENS2_SETTINGS, "RUN hcs2 applied")
-  // SENSOR_SETTINGS_CMD("ccs2", sensors->_s_second, coolCorInt,
-  //                     ADDR_SENS2_SETTINGS, "RUN ccs2 applied")
-  // SENSOR_SETTINGS_CMD("hb2", sensors->_s_second, highBorder,
-  //                     ADDR_SENS2_SETTINGS, "RUN hb2 applied")
-  // SENSOR_SETTINGS_CMD("cb2", sensors->_s_second, coolBorder,
-  //                     ADDR_SENS2_SETTINGS, "RUN cb2 applied")
-  // SENSOR_SETTINGS_CMD("dcs2", sensors->_s_second, defaultCorInt,
-  //                     ADDR_SENS2_SETTINGS, "RUN dcs2 applied")
-
-  // SENSOR_SETTINGS_CMD("hcs3", sensors->_s_third, highCorInt,
-  //                     ADDR_SENS3_SETTINGS, "RUN hcs3 applied")
-  // SENSOR_SETTINGS_CMD("ccs3", sensors->_s_third, coolCorInt,
-  //                     ADDR_SENS3_SETTINGS, "RUN ccs3 applied")
-  // SENSOR_SETTINGS_CMD("hb3", sensors->_s_third, highBorder,
-  // ADDR_SENS3_SETTINGS,
-  //                     "RUN hb3 applied")
-  // SENSOR_SETTINGS_CMD("cb3", sensors->_s_third, coolBorder,
-  // ADDR_SENS3_SETTINGS,
-  //                     "RUN cb3 applied")
-  // SENSOR_SETTINGS_CMD("dcs3", sensors->_s_third, defaultCorInt,
-  //                     ADDR_SENS3_SETTINGS, "RUN dcs3 applied")
-
-  // SENSOR_SETTINGS_CMD("hcs4", sensors->_s_fourth, highCorInt,
-  //                     ADDR_SENS4_SETTINGS, "RUN hcs4 applied")
-  // SENSOR_SETTINGS_CMD("ccs4", sensors->_s_fourth, coolCorInt,
-  //                     ADDR_SENS4_SETTINGS, "RUN ccs4 applied")
-  // SENSOR_SETTINGS_CMD("hb4", sensors->_s_fourth, highBorder,
-  //                     ADDR_SENS4_SETTINGS, "RUN hb4 applied")
-  // SENSOR_SETTINGS_CMD("cb4", sensors->_s_fourth, coolBorder,
-  //                     ADDR_SENS4_SETTINGS, "RUN cb4 applied")
-  // SENSOR_SETTINGS_CMD("dcs4", sensors->_s_fourth, defaultCorInt,
-  //                     ADDR_SENS4_SETTINGS, "RUN dcs4 applied")
+  SENSOR_SETTINGS_CMD("es1", sensors->_s_first, ema_k, ADDR_SENS1_SETTINGS,
+                      "Run es1 applied")
+  SENSOR_SETTINGS_CMD("es2", sensors->_s_second, ema_k, ADDR_SENS2_SETTINGS,
+                      "RUN es2 applied")
+  SENSOR_SETTINGS_CMD("es3", sensors->_s_third, ema_k, ADDR_SENS3_SETTINGS,
+                      "RUN es3 applied")
+  SENSOR_SETTINGS_CMD("es4", sensors->_s_fourth, ema_k, ADDR_SENS4_SETTINGS,
+                      "RUN es4 applied")
 
 #ifdef ENABLE_VALIDATE
   // max=<int> - set the maximum permitted offset
   else if (strcmp(_firstSlice, "max") == 0) {
-    maxPermOffset = second_slice_value;
+    _EEPROM::writeMaxPermOffset(second_slice_value);
 #ifdef DEBUG_COMMAND
     Serial.println("RUN    max applied");
 #endif
   }
   // min=<int> - set the minimum permitted offset
   else if (strcmp(_firstSlice, "min") == 0) {
-    minPermOffset = second_slice_value;
+    _EEPROM::writeMinPermOffset(second_slice_value);
 #ifdef DEBUG_COMMAND
     Serial.println("RUN    min applied");
 #endif
-  } else if (strcmp(_firstSlice, "ut") == 0) {
+  }
+  else if (strcmp(_firstSlice, "ut") == 0) {
     uTemp = second_slice_value;
 #ifdef DEBUG_COMMAND
     Serial.println("RUN uTemp applied");
@@ -162,15 +116,11 @@ void runCmd(char *cmd, Sensors *sensors) {
   }
 #endif
 #ifdef DEBUG_COMMAND
-  else
-    Serial.println("RUN    no branch matched");
+  else Serial.println("RUN    no branch matched");
 #endif
 }
 void readCommandAndImpl(char *cmd, Sensors *sensors) {
-  if (strlen(cmd) == 0) {
-    free(cmd);
-    return;
-  }
+  if (strlen(cmd) == 0) return;
 #ifdef DEBUG_COMMAND
   PRINT_DEBUG("Read command: ", cmd);
 #endif
@@ -184,15 +134,20 @@ void readCommandAndImpl(char *cmd, Sensors *sensors) {
     runCmd(cmd, sensors);
   } else
     Serial.println("Command not found");
-
-  free(cmd);
 }
 
 void handleCommand() {
   if (Serial.available() > 0) {
-    char *c_str = static_cast<char *>(malloc(getCmdBufSize()));
-    if (c_str == nullptr) return;
-    Serial.readString().toCharArray(c_str, getCmdBufSize());
-    readCommandAndImpl(c_str, &Sens::all);
+    static char cmd[CMD_BUF_SIZE];
+    size_t i = 0;
+    while (Serial.available() > 0 && i < CMD_BUF_SIZE - 1) {
+      char ch = static_cast<char>(Serial.read());
+      if (ch == '\n' || ch == '\r') break;
+      cmd[i++] = ch;
+    }
+    cmd[i] = '\0';
+    readCommandAndImpl(cmd, &Sens::all);
   }
 }
+
+#endif  // ENABLE_COMMANDS

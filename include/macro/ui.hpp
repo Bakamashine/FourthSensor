@@ -19,6 +19,6 @@
     char acpBuf[8];                                   \
     char tempBuf[10];                                 \
     dtostrf(temp, 0, 2, tempBuf);                     \
-    snprintf(acpBuf, sizeof(acpBuf), "%d", acp);      \
+    itoa(acp, acpBuf, 10);                            \
     RAW_WRITE_ROW(row, text, acpBuf, tempBuf, p_cls); \
   } while (0)
