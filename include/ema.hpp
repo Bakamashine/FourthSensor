@@ -1,7 +1,7 @@
 #pragma once
 
 #include <stdint.h>
-#define DEFAULT_EMA_K 6
+#define DEF_EMA_K 6
 
 /**
  * @brief   A class for single-pole infinite impulse response filters
@@ -83,6 +83,6 @@ class EMA {
 
  private:
   uint_t filtered = 0;
-  uint8_t K = DEFAULT_EMA_K;
+  uint8_t K = DEF_EMA_K;
   uint_t fixedPointAHalf = 1 << (K - 1);
 };

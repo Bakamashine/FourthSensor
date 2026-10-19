@@ -9,7 +9,7 @@
 #include "validate.hpp"
 
 namespace UI {
-void mainPage(U8G2 *display, Sensors *sensors) {
+void mainPage(U8G2 *display, Sensors *sns) {
   display->setFont(FONT);
 
   // columns
@@ -18,24 +18,24 @@ void mainPage(U8G2 *display, Sensors *sensors) {
   // rows
 
   // main sensor
-  if (sensors->_s_first->temp)
-    N_AT_WRITE_ROW(U8G2_MAIN_ROW(1), PREVIEW_TEMP, sensors->_s_first->temp,
-                   sensors->_s_first->acp, display);
+  if (sns->_s_first->temp)
+    N_AT_WRITE_ROW(U8G2_MAIN_ROW(1), PREVIEW_TEMP, sns->_s_first->temp,
+                   sns->_s_first->acp, display);
 
   // first reserve sensor
-  if (sensors->_s_second->temp)
+  if (sns->_s_second->temp)
     N_AT_WRITE_ROW(U8G2_MAIN_ROW(2), PREVIEW_FIRST_RESERVE,
-                   sensors->_s_second->temp, sensors->_s_second->acp, display);
+                   sns->_s_second->temp, sns->_s_second->acp, display);
 
   // second reserve sensor
-  if (sensors->_s_third->temp)
+  if (sns->_s_third->temp)
     N_AT_WRITE_ROW(U8G2_MAIN_ROW(3), PREVIEW_SECOND_RESERVE,
-                   sensors->_s_third->temp, sensors->_s_third->acp, display);
+                   sns->_s_third->temp, sns->_s_third->acp, display);
 
   // street sensor
-  if (sensors->_s_fourth->temp)
-    N_AT_WRITE_ROW(U8G2_MAIN_ROW(4), PREVIEW_STREET, sensors->_s_fourth->temp,
-                   sensors->_s_fourth->acp, display);
+  if (sns->_s_fourth->temp)
+    N_AT_WRITE_ROW(U8G2_MAIN_ROW(4), PREVIEW_STREET, sns->_s_fourth->temp,
+                   sns->_s_fourth->acp, display);
 
 #ifdef DS18_SENSOR
   char ds18Buf[10];

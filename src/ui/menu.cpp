@@ -6,168 +6,10 @@
 #include "macro/ui.hpp"
 #include "sensor.hpp"
 #include "settings.hpp"
+#include "ui/menu_draw.hpp"
+#include "ui/menu_items.hpp"
 
-/// bounds for the settings that are not sensor corrections
-#define HYST_MIN 0
-#define HYST_MAX 50
-#define HYST_STEP 0.01F
-#define OFFSET_MIN 0
-#define OFFSET_MAX 200
-#define UTEMP_MIN 0
-#define UTEMP_MAX 100
-
-#define MENU_ITEMS_COUNT 5
-#define MAX_DEEP_ITEMS 4
-
-#define INT_SUMMAND  1
-#define F_SUMMAND 0.01F
-
-
-struct MenuItem {
-  int row;
-  int marker;
-  const char *preview;
-  Sensor *sensor;
-};
-
-enum DeepValueKind { DEEP_INT, DEEP_FLOAT };
-
-struct DeepMenuItem {
-  int row;
-  const char *preview;
-  void *target;
-  DeepValueKind kind;
-  float step;
-  void (*fwrite_func)(float);
-  void (*write_func)(int);
-  float min;
-  float max;
-};
-
-static MenuItem _items[MENU_ITEMS_COUNT];
-static DeepMenuItem _deepMenuItems[MAX_DEEP_ITEMS];
-static int _deepMenuCount = 0;
-
-#ifdef ENABLE_SETTINGS
-static void buildItems(Sensors *sensors) {
-  _items[0] = {.row = U8G2_FIRST_ROW,
-               .marker = 0,
-               .preview = PREVIEW_S1,
-               .sensor = sensors->_s_first};
-  _items[1] = {.row = U8G2_SECOND_ROW,
-               .marker = 0,
-               .preview = PREVIEW_S2,
-               .sensor = sensors->_s_second};
-  _items[2] = {.row = U8G2_THIRD_ROW,
-               .marker = 0,
-               .preview = PREVIEW_S3,
-               .sensor = sensors->_s_third};
-  _items[3] = {.row = U8G2_FOURTH_ROW,
-               .marker = 0,
-               .preview = PREVIEW_S4,
-               .sensor = sensors->_s_fourth};
-  _items[4] = {.row = U8G2_FIFTH_ROW,
-               .marker = 0,
-               .preview = PREVIEW_OTHER,
-               .sensor = nullptr};
-}
-
-static void buildSensorDeepMenu(Sensor *sensor) {
-  _deepMenuCount = 1;
-  _deepMenuItems[0] = {.row = U8G2_FIRST_ROW,
-                       .preview = "EMA",
-                       .target = &sensor->settings.ema_k,
-                       .kind = DEEP_INT,
-                       .step = 1,
-                       .fwrite_func = nullptr,
-                       .write_func = nullptr,
-                       .min = 1,
-                       .max = 10};
-}
-
-static void buildOtherDeepMenu() {
-  int count = 0;
-  _deepMenuItems[count] = {.row = U8G2_FIRST_ROW,
-                           .preview = "Hyst",
-                           .target = &hyst,
-                           .kind = DEEP_FLOAT,
-                           .step = HYST_STEP,
-                           .fwrite_func = _EEPROM::writeHyst,
-                           .write_func = nullptr,
-                           .min = HYST_MIN,
-                           .max = HYST_MAX};
-  count++;
-#ifdef ENABLE_VALIDATE
-  _deepMenuItems[count] = {.row = U8G2_SECOND_ROW,
-                           .preview = "Max",
-                           .target = &maxPermOffset,
-                           .kind = DEEP_INT,
-                           .step = 1,
-                           .fwrite_func = nullptr,
-                           .write_func = _EEPROM::writeMaxPermOffset,
-                           .min = static_cast<float>(minPermOffset),
-                           .max = OFFSET_MAX};
-  count++;
-  _deepMenuItems[count] = {.row = U8G2_THIRD_ROW,
-                           .preview = "Min",
-                           .target = &minPermOffset,
-                           .kind = DEEP_INT,
-                           .step = 1,
-                           .fwrite_func = nullptr,
-                           .write_func = _EEPROM::writeMinPermOffset,
-                           .min = OFFSET_MIN,
-                           .max = static_cast<float>(maxPermOffset)};
-  count++;
-#endif
-  _deepMenuItems[count] = {.row = U8G2_FIRST_ROW + count * U8G2_ROW_STEP,
-                           .preview = "UserT",
-                           .target = &uTemp,
-                           .kind = DEEP_INT,
-                           .step = 1,
-                           .fwrite_func = nullptr,
-                           .write_func = _EEPROM::writeUserTemp,
-                           .min = UTEMP_MIN,
-                           .max = UTEMP_MAX};
-  count++;
-  _deepMenuCount = count;
-}
-
-static void formatDeepValue(const DeepMenuItem &item, char *buf, size_t size) {
-  if (item.kind == DEEP_FLOAT) {
-    dtostrf(*static_cast<float *>(item.target), 0, 2, buf);
-  } else {
-    itoa(*static_cast<int *>(item.target), buf, 10);
-  }
-}
-
-static void drawDeepMenu(U8G2 *display) {
-  for (int i = 0; i < _deepMenuCount; i++) {
-    const DeepMenuItem &item = _deepMenuItems[i];
-    char buf[10];
-    formatDeepValue(item, buf, sizeof(buf));
-    display->drawStr(U8G2_FIRST_COLUMN, item.row, item.preview);
-    display->drawStr(U8G2_SECOND_COLUMN, item.row, buf);
-    if (i == _deepMenuSelected)
-      display->drawStr(U8G2_MENU_MARKER_X, item.row, ">");
-  }
-}
-#endif
-
-#ifdef ENABLE_SETTINGS
-
-static void drawItems(U8G2 *display) {
-  for (int i = 0; i < MENU_ITEMS_COUNT; i++) {
-    const MenuItem &item = _items[i];
-    display->drawStr(U8G2_FIRST_COLUMN, item.row, item.preview);
-  }
-}
-
-static void drawMarker(U8G2 *display) {
-  if (_baseMenuSelected < 0 || _baseMenuSelected >= MENU_ITEMS_COUNT) return;
-  const MenuItem &item = _items[_baseMenuSelected];
-  display->drawStr(item.marker, item.row, ">");
-}
-#endif  // ENABLE_SETTINGS
+using namespace DeepMenu;
 
 void menuPage(U8G2 *display, Sensors *sensors) {
 #ifdef ENABLE_SETTINGS
@@ -196,21 +38,7 @@ void menuPage(U8G2 *display, Sensors *sensors) {
 static void changeDeepValue(int delta) {
   if (_deepMenuSelected < 0 || _deepMenuSelected >= _deepMenuCount) return;
   DeepMenuItem &item = _deepMenuItems[_deepMenuSelected];
-  
-  // decrease
-  if (delta < 0) {
-    if (item.fwrite_func != nullptr)
-      item.fwrite_func(*static_cast<float *>(item.target)-F_SUMMAND);
-    else if (item.write_func != nullptr)
-      item.write_func(*static_cast<int *>(item.target)-INT_SUMMAND);
-  }
-  // increase
-  else if (delta > 0) {
-    if (item.fwrite_func != nullptr)
-      item.fwrite_func(*static_cast<float *>(item.target)+F_SUMMAND);
-    else if (item.write_func != nullptr)
-      item.write_func(*static_cast<int *>(item.target)+INT_SUMMAND);
-  }
+  writeFunc(item.target, delta, item);
 }
 
 void menuPageIncreaseValue() { changeDeepValue(1); }
@@ -233,4 +61,10 @@ void menuSelectPrev() {
     _deepMenuSelected =
         (_deepMenuSelected - 1 + _deepMenuCount) % _deepMenuCount;
   }
+}
+
+void exitMenu() {
+  _baseMenuSelected = 0;
+  _deepMenuSelected = 0;
+  isDeepMenuOpen = false;
 }

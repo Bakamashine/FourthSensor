@@ -2,11 +2,16 @@
 
 #include "constants/settings.hpp"
 #include "sensor.hpp"
+#define DEF_MAX_PERM_OFFSET 50
+#define DEF_MIN_PERM_OFFSET 10
+#define DEF_USER_TEMP 40
+#define MAX_PERM_OFFSET 100
+#define MIN_PERM_OFFSET -34
 
 #ifdef ENABLE_VALIDATE
-inline int minPermOffset = 10;
-inline int maxPermOffset = 50;
-inline int uTemp = 40;
+inline int maxPermOffset = DEF_MAX_PERM_OFFSET;
+inline int minPermOffset = DEF_MIN_PERM_OFFSET;
+inline int uTemp = DEF_USER_TEMP;
 #endif
 inline float hyst = DEFAULT_HYSTERESIS;
 #ifdef ENABLE_BURNER
@@ -27,4 +32,6 @@ void readHyst();
 
 // main method for reading from eeprom
 void readFromEEPROM();
+
+void writeDefaultValue(Sensors*);
 }  // namespace _EEPROM

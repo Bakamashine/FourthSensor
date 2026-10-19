@@ -3,6 +3,7 @@
 #ifdef ENABLE_COMMANDS
 
 #include <Arduino.h>
+#include <EEPROM.h>
 #include <string.h>
 
 #include "constants/addr_eeprom.hpp"
@@ -50,6 +51,7 @@ void help() {
   Serial.println(F("min=<int>         - set min permitted offset"));
   Serial.println(F("ut=<int>          - set user temperature"));
 #endif
+  Serial.println(F("clear             - restore factory defaults"));
   Serial.println(F("<other>=<int>     - not a command; try 'help'"));
 }
 int tryParse(char *cmd) {
@@ -62,7 +64,7 @@ int tryParse(char *cmd) {
 
   return 1;
 }
-void runCmd(char *cmd, Sensors *sensors) {
+void runCmd(char *cmd, Sensors *sns) {
 #ifdef DEBUG_COMMAND
   PRINT_DEBUG("Before cmd=", cmd);
   PRINT_DEBUG("First=", _firstSlice);
@@ -84,13 +86,13 @@ void runCmd(char *cmd, Sensors *sensors) {
    * Third: <int> - number sensor
    */
 
-  SENSOR_SETTINGS_CMD("es1", sensors->_s_first, ema_k, ADDR_SENS1_SETTINGS,
+  SENSOR_SETTINGS_CMD("es1", sns->_s_first, ema_k, ADDR_SENS1_SETTINGS,
                       "Run es1 applied")
-  SENSOR_SETTINGS_CMD("es2", sensors->_s_second, ema_k, ADDR_SENS2_SETTINGS,
+  SENSOR_SETTINGS_CMD("es2", sns->_s_second, ema_k, ADDR_SENS2_SETTINGS,
                       "RUN es2 applied")
-  SENSOR_SETTINGS_CMD("es3", sensors->_s_third, ema_k, ADDR_SENS3_SETTINGS,
+  SENSOR_SETTINGS_CMD("es3", sns->_s_third, ema_k, ADDR_SENS3_SETTINGS,
                       "RUN es3 applied")
-  SENSOR_SETTINGS_CMD("es4", sensors->_s_fourth, ema_k, ADDR_SENS4_SETTINGS,
+  SENSOR_SETTINGS_CMD("es4", sns->_s_fourth, ema_k, ADDR_SENS4_SETTINGS,
                       "RUN es4 applied")
 
 #ifdef ENABLE_VALIDATE
@@ -126,6 +128,11 @@ void readCommandAndImpl(char *cmd, Sensors *sensors) {
 #endif
   if (strcmp(cmd, "help") == 0) {
     help();
+  } else if (strcmp(cmd, "clear") == 0) {
+    _EEPROM::writeDefaultValue(sensors);
+#ifdef DEBUG_COMMAND
+    Serial.println("RUN    clear applied");
+#endif
   } else if (tryParse(cmd)) {
 #ifdef DEBUG_COMMAND
     PRINT_DEBUG("parsed first=", _firstSlice);

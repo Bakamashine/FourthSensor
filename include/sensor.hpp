@@ -20,14 +20,9 @@
 #define SENS_SETTINGS_MAGIC 0x5A02
 
 struct SensorSettings {
-  uint16_t magic = SENS_SETTINGS_MAGIC;  ///< validity marker, written as-is
-  int ema_k = DEFAULT_EMA_K;
-
-  // int highCorInt = 0;
-  // int coolCorInt = 0;
-  // int defaultCorInt = 0;
-  // int highBorder = 0;
-  // int coolBorder = 0;
+  uint16_t addr_magic =
+      SENS_SETTINGS_MAGIC;  ///< validity marker, written as-is
+  int ema_k = DEF_EMA_K;
 };
 struct Sensor {
   unsigned int acp;  ///< ADC count (0-1023) after the acp filters
@@ -37,12 +32,9 @@ struct Sensor {
 #if TEMP_CALCULATION_VARIANT == VIA_RESISTANCE
   float resist;  ///< Calculated sensor resistance in ohms
 #endif
-  uint8_t pin;  ///< Analog pin the sensor is connected to
-  // uint32_t lastSampleMs;   ///< Timestamp of the last temperature sample (ms)
+  uint8_t pin;     ///< Analog pin the sensor is connected to
   float lastTemp;  ///< Last accepted temperature value
   bool ready;      ///< true once the first sample produced a value
-  // bool increase = false;   ///< direction of the last temperature change
-  // int corInt;          ///< Integer temperature correction offset
 
   /**
    * SensorSettings contains the correct integer value for temperature
@@ -94,6 +86,8 @@ void writeSensSett(SensorSettings *, int addr);
 
 // get the struct from eeprom memory
 void readSensSett(SensorSettings *ss, int addr);
+
+void writeEMA_KSett(SensorSettings *ss, int ema_k, int addr);
 
 namespace Sens {
 inline Sensor first;

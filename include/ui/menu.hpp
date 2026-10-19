@@ -9,6 +9,4 @@ void menuPageIncreaseValue();
 void menuPageDecreaseValue();
 void menuSelectNext();
 void menuSelectPrev();
-inline bool isDeepMenuOpen = false;
-inline int _baseMenuSelected = 0;
-inline int _deepMenuSelected = 0;
+void exitMenu();

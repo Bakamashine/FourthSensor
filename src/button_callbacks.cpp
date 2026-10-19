@@ -3,7 +3,9 @@
 #include "constants/pin.hpp"
 #include "page.hpp"
 #include "ui/menu.hpp"
+#include "ui/menu_items.hpp"
 
+using namespace DeepMenu;
 namespace Btn {
 OneButtonTiny plus(PLUS_BTN_PIN);
 OneButtonTiny minus(MINUS_BTN_PIN);
@@ -29,6 +31,9 @@ void btnMenuOnClick() {
   if (currentPage == SETTINGS && isDeepMenuOpen) {
     isDeepMenuOpen = false;
     return;
+  }
+  if (currentPage == SETTINGS) {
+    exitMenu();
   }
   currentPage = currentPage == MAIN ? SETTINGS : MAIN;
   isDeepMenuOpen = false;
@@ -63,7 +68,7 @@ void btnPlusOneClick() {
 void btnMenuLongPress() { btnMenuOnClick(); }
 
 void btnMinusOneClick() {
-  if (currentPage == SETTINGS && !isDeepMenuOpen) {
+  if (currentPage == SETTINGS && !DeepMenu::isDeepMenuOpen) {
     menuSelectNext();
 #ifdef DEBUG
     Serial.println("goToDown");

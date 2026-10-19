@@ -244,5 +244,5 @@ void writeSensSett(SensorSettings *ss, int addr) { EEPROM.put(addr, *ss); }
 void readSensSett(SensorSettings *ss, int addr) {
   SensorSettings stored;
   EEPROM.get(addr, stored);
-  if (stored.magic == SENS_SETTINGS_MAGIC) *ss = stored;
+  if (stored.addr_magic == SENS_SETTINGS_MAGIC) *ss = stored;
 }

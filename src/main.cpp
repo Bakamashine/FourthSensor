@@ -12,6 +12,7 @@
 #include "settings.hpp"
 #include "ui/main_ui.hpp"
 #include "ui/menu.hpp"
+#include "ui/menu_items.hpp"
 #ifdef ENABLE_COMMANDS
 #include "command.hpp"
 void handleCommand();
@@ -22,7 +23,7 @@ void handleCommand();
 #ifdef ENABLE_BURNER
 #include "burner.hpp"
 #endif
-
+using namespace DeepMenu;
 void debugPrint() {
   Serial.println("=====DEBUG INPUT====");
   // acp

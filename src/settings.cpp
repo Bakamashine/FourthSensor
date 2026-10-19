@@ -69,4 +69,31 @@ void readUserTemp() {
   uTemp = v;
 }
 
+void writeDefaultValue(Sensors* sns) {
+  hyst = DEFAULT_HYSTERESIS;
+  writeHyst(hyst);
+#ifdef ENABLE_VALIDATE
+  writeMaxPermOffset(DEF_MAX_PERM_OFFSET);
+  writeMinPermOffset(DEF_MIN_PERM_OFFSET);
+  writeUserTemp(DEF_USER_TEMP);
+#endif
+  SensorSettings def_sett;
+  def_sett.ema_k = DEF_EMA_K;
+  def_sett.addr_magic = SENS_SETTINGS_MAGIC;
+  sns->_s_first->settings = def_sett;
+  sns->_s_second->settings = def_sett;
+  sns->_s_third->settings = def_sett;
+  sns->_s_fourth->settings = def_sett;
+  writeSensSett(&sns->_s_first->settings, ADDR_SENS1_SETTINGS);
+  writeSensSett(&sns->_s_second->settings, ADDR_SENS2_SETTINGS);
+  writeSensSett(&sns->_s_third->settings, ADDR_SENS3_SETTINGS);
+  writeSensSett(&sns->_s_fourth->settings, ADDR_SENS4_SETTINGS);
+#ifdef EMA_FILTER
+  sns->_s_first->ema.setK(DEF_EMA_K);
+  sns->_s_second->ema.setK(DEF_EMA_K);
+  sns->_s_third->ema.setK(DEF_EMA_K);
+  sns->_s_fourth->ema.setK(DEF_EMA_K);
+#endif
+}
+
 }  // namespace _EEPROM

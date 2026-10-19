@@ -6,7 +6,7 @@
 #include "sensor.hpp"
 
 namespace UI {
-void mainPage(U8G2 *display, Sensors *sensors);
+void mainPage(U8G2 *display, Sensors *sns);
 void errorPage(U8G2 *display, int error_code);
 void draw();
 inline OLED_CLASS u8g2(U8G2_R0);
