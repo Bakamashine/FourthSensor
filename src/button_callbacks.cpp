@@ -4,30 +4,13 @@
 #include "page.hpp"
 #include "ui/menu.hpp"
 #include "ui/menu_items.hpp"
+#include "validate.hpp"
 
 using namespace DeepMenu;
-namespace Btn {
-OneButtonTiny plus(PLUS_BTN_PIN);
-OneButtonTiny minus(MINUS_BTN_PIN);
-OneButtonTiny menu(MENU_BTN_PIN);
-}  // namespace Btn
 
-void btnSetup() {
-  const int debounce = 20;
+static void btnBurner() { setBurnerStatus(true); }
 
-  Btn::menu.setDebounceMs(debounce);
-  Btn::plus.setDebounceMs(debounce);
-  Btn::minus.setDebounceMs(debounce);
-
-  // Btn::menu.attachClick (btnMenuOnClick);
-  Btn::menu.attachLongPressStart(btnMenuLongPress);
-  Btn::plus.attachClick(btnPlusOneClick);
-  Btn::plus.attachLongPressStart(btnPlusLongPress);
-  Btn::minus.attachClick(btnMinusOneClick);
-  Btn::minus.attachLongPressStart(btnMinusLongPress);
-}
-
-void btnMenuOnClick() {
+static void btnMenuOnClick() {
   if (currentPage == SETTINGS && isDeepMenuOpen) {
     isDeepMenuOpen = false;
     return;
@@ -45,7 +28,13 @@ void btnTick() {
   Btn::minus.tick();
 }
 
-void btnPlusLongPress() {
+void btnTickBurner() {
+#ifdef BURNER_BTN
+  Btn::burner_btn.tick();
+#endif
+}
+
+static void btnPlusLongPress() {
   if (currentPage != SETTINGS) return;
   if (!isDeepMenuOpen) {
     isDeepMenuOpen = true;
@@ -55,28 +44,40 @@ void btnPlusLongPress() {
   }
 }
 
-void btnPlusOneClick() {
+static void btnPlusOneClick() {
   if (currentPage == SETTINGS && !isDeepMenuOpen) {
     menuSelectPrev();
-#ifdef DEBUG
-    Serial.println("goToUp");
-#endif
   } else if (currentPage == SETTINGS && isDeepMenuOpen) {
     menuPageIncreaseValue();
   }
 }
-void btnMenuLongPress() { btnMenuOnClick(); }
+static void btnMenuLongPress() { btnMenuOnClick(); }
 
-void btnMinusOneClick() {
+static void btnMinusOneClick() {
   if (currentPage == SETTINGS && !DeepMenu::isDeepMenuOpen) {
     menuSelectNext();
-#ifdef DEBUG
-    Serial.println("goToDown");
-#endif
   } else if (currentPage == SETTINGS && isDeepMenuOpen) {
     menuPageDecreaseValue();
   }
 }
-void btnMinusLongPress() {
+static void btnMinusLongPress() {
   if (currentPage == SETTINGS && isDeepMenuOpen) menuSelectNext();
+}
+
+void btnSetup() {
+  const int debounce = 20;
+
+  Btn::menu.setDebounceMs(debounce);
+  Btn::plus.setDebounceMs(debounce);
+  Btn::minus.setDebounceMs(debounce);
+#ifdef BURNER_BTN
+  Btn::burner_btn.setDebounceMs(debounce);
+  Btn::burner_btn.attachLongPressStart(btnBurner);
+#endif
+  // Btn::menu.attachClick (btnMenuOnClick);
+  Btn::menu.attachLongPressStart(btnMenuLongPress);
+  Btn::plus.attachClick(btnPlusOneClick);
+  Btn::plus.attachLongPressStart(btnPlusLongPress);
+  Btn::minus.attachClick(btnMinusOneClick);
+  Btn::minus.attachLongPressStart(btnMinusLongPress);
 }

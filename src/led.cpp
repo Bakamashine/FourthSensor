@@ -1,11 +1,17 @@
 #include "led.hpp"
 
 void ledDebug() {
-  digitalWrite(BURNER_PIN, HIGH);
-  digitalWrite(ERROR_PIN, LOW);
-  delay(200);
-  digitalWrite(BURNER_PIN, LOW);
-  digitalWrite(ERROR_PIN, HIGH);
+  bool status = false;
+  for (int i = 0; i < 2; i++) {
+    digitalWrite(BURNER_PIN, !status);
+    digitalWrite(ERROR_PIN, status);
+    digitalWrite(VENT_LED_PIN, !status);
+    digitalWrite(IGN_PIN, status);
+    digitalWrite(PILOT_PIN, !status);
+    digitalWrite(BURNER_SENSOR_LED_PIN, status);
+    delay(200);
+    status = true;
+  }
 }
 
 void ledSetup() {
@@ -16,4 +22,8 @@ void ledSetup() {
   // error
   pinMode(ERROR_PIN, OUTPUT);
 #endif
+  pinMode(VENT_LED_PIN, OUTPUT);
+  pinMode(IGN_PIN, OUTPUT);
+  pinMode(PILOT_PIN, OUTPUT);
+  pinMode(BURNER_SENSOR_LED_PIN, OUTPUT);
 }

@@ -8,7 +8,7 @@
 #include "settings.hpp"
 #define PERMITTED_TEMP_DIFFERENCE 5
 
-namespace Validate {
+namespace Val {
 int checkSensors(Sensors *sn) {
   /*
   codes:
@@ -63,13 +63,12 @@ int checkTemperature(Sensors *sn) {
 
   return 0;  // no error
 }
-void pipeline(Sensors *sn) {
-  if (!sn->_s_first->ready || !sn->_s_second->ready || !sn->_s_third->ready ||
-      !sn->_s_fourth->ready)
-    return;
 
-  int sensor_code = checkSensors(sn);
-  int temperature_code = checkTemperature(sn);
+void pipeline(Sensors *sns) {
+  if (!getReadySensors(sns) || errorCode > 0) return;
+
+  int sensor_code = checkSensors(sns);
+  int temperature_code = checkTemperature(sns);
 
   if (sensor_code > 0)
     errorCode = sensor_code;
@@ -77,6 +76,8 @@ void pipeline(Sensors *sn) {
     errorCode = temperature_code;
   else
     errorCode = 0;
+
+  if (errorCode > 0) return haltSystem();
 }
 
 void haltSystem() {
@@ -84,10 +85,22 @@ void haltSystem() {
     Serial.print("ERROR: ");
     Serial.println(errorCode);
     digitalWrite(BURNER_PIN, LOW);
+#ifdef BURNER_PREPARE
+    digitalWrite(VENT_LED_PIN, LOW);
+    digitalWrite(IGN_PIN, LOW);
+    digitalWrite(PILOT_PIN, LOW);
+    digitalWrite(BURNER_SENSOR_LED_PIN, LOW);
+#endif
     digitalWrite(ERROR_PIN, HIGH);
-    Burner::status = 0;
+    burnerStatus = false;
   }
   systemHalted = 1;
   currentPage = ERROR;
 }
-}  // namespace Validate
+
+void checkError() {
+  if (errorCode > 0) {
+    return haltSystem();
+  }
+}
+}  // namespace Val

@@ -57,7 +57,7 @@ void draw() {
         break;
 #ifdef ENABLE_VALIDATE
       case ERROR:
-        errorPage(&u8g2, Validate::errorCode);
+        errorPage(&u8g2, Val::errorCode);
         break;
 #endif
     }

@@ -23,7 +23,9 @@ void handleCommand();
 #ifdef ENABLE_BURNER
 #include "burner.hpp"
 #endif
+#include "led.hpp"
 using namespace DeepMenu;
+
 void debugPrint() {
   Serial.println("=====DEBUG INPUT====");
   // acp
@@ -53,21 +55,11 @@ void debugPrint() {
   PRINT_DEBUG("[MENU_UI_H] _deepMenuSelected: ", _deepMenuSelected);
   PRINT_DEBUG("[PAGE_H] currentPage: ", currentPage);
 #ifdef ENABLE_VALIDATE
-  PRINT_DEBUG("[ERROR_H] errorCode: ", Validate::errorCode);
+  PRINT_DEBUG("[ERROR_H] errorCode: ", Val::errorCode);
   PRINT_DEBUG("[SETTINGS_H] minPermOffset: ", minPermOffset);
   PRINT_DEBUG("[SETTINGS_H] maxPermOffset: ", maxPermOffset);
 #endif
 }
-
-#ifdef LED_DEBUG
-inline void ledDebug() {
-  digitalWrite(ERROR_PIN, HIGH);
-  digitalWrite(BURNER_PIN, LOW);
-  delay(100);
-  digitalWrite(ERROR_PIN, LOW);
-  digitalWrite(BURNER_PIN, HIGH);
-}
-#endif
 
 void setup() {
   wdt_disable();
@@ -75,9 +67,9 @@ void setup() {
   Wire.setWireTimeout(3000, true);
   UI::u8g2.begin();
 
-  sensorSetup();
+  // sensorSetup();
   btnSetup();
-#if LED_BUILD_STATUS
+#ifdef LED_BUILD_STATUS
   ledSetup();
 #endif
   _EEPROM::readFromEEPROM();
@@ -85,32 +77,46 @@ void setup() {
 }
 
 void loop() {
-  wdt_reset();
-  btnTick();
 #ifdef LED_DEBUG
   ledDebug();
 #endif
-  sensorsLoop();
+  wdt_reset();
+  btnTickBurner();
+
+#ifdef BURNER_PREPARE
+  Burner::prepare();
+#endif
+#ifdef ENABLE_VALIDATE
+  Val::checkError();
+  if (!Val::systemHalted) {
+#endif
+
+    sensorSetup();  // only once
+    btnTick();
+    sensorsLoop();
 
 #ifdef DS18_SENSOR
-  readFromDS18();
+    readFromDS18();
 #endif
+
 #ifdef DEBUG
-  debugPrint();
+    debugPrint();
 #endif
 
 #ifdef ENABLE_COMMANDS
-  handleCommand();
+    handleCommand();
+#endif
+#ifdef ENABLE_VALIDATE
+  }
 #endif
   UI::draw();
 
 #ifdef ENABLE_VALIDATE
   // validate
-  Validate::pipeline(&Sens::all);
-  if (Validate::errorCode > 0) Validate::haltSystem();
+  Val::pipeline(&Sens::all);
 #endif
 
 #ifdef ENABLE_BURNER
-  Burner::burnerSystem();
+  if (!Val::systemHalted) Burner::burnerSystem();
 #endif
 }

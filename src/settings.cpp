@@ -97,3 +97,10 @@ void writeDefaultValue(Sensors* sns) {
 }
 
 }  // namespace _EEPROM
+
+#ifdef ENABLE_BURNER
+void setBurnerStatus(bool st) {
+  burnerStatus = st;
+  digitalWrite(BURNER_PIN, st);
+}
+#endif

@@ -2,18 +2,15 @@
 #include <OneButtonTiny.h>
 
 #include "constants/pin.hpp"
+#include "constants/settings.hpp"
 
 namespace Btn {
-extern OneButtonTiny plus;
-extern OneButtonTiny minus;
-extern OneButtonTiny menu;
+inline OneButtonTiny plus(PLUS_BTN_PIN);
+inline OneButtonTiny minus(MINUS_BTN_PIN);
+inline OneButtonTiny menu(MENU_BTN_PIN);
+inline OneButtonTiny burner_btn(BURNER_BTN_PIN);
 }  // namespace Btn
 
 void btnSetup();
-void btnPlusOneClick();
-void btnPlusLongPress();
-void btnMinusOneClick();
-void btnMinusLongPress();
-void btnMenuOnClick();
-void btnMenuLongPress();
 void btnTick();
+void btnTickBurner();
