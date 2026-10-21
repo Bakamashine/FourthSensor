@@ -26,7 +26,6 @@ inline bool isBurnerReady = false;
  * Only delay (for default 5 sec)
  */
 
-
 // void ventilation();
 // void ignitionTransformer();
 // void pilotValve();

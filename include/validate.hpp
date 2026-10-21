@@ -9,4 +9,4 @@ void checkError();
 void haltSystem();
 
 inline bool systemHalted = false;
-}  // namespace Validate
+}  // namespace Val
