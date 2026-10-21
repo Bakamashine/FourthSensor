@@ -10,11 +10,11 @@
 #define PLUS_BTN_PIN 11
 #define MINUS_BTN_PIN 10
 
-#define BURNER_BTN_PIN 6
+#define BURNER_BTN_PIN 2
 #define VENT_LED_PIN 7
 #define IGN_PIN 8
 #define PILOT_PIN 9
 #define BURNER_SENSOR_LED_PIN 3
 
-#define BURNER_PIN 2
+#define BURNER_PIN 6
 #define ERROR_PIN 4

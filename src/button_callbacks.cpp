@@ -8,7 +8,7 @@
 
 using namespace DeepMenu;
 
-static void btnBurner() { setBurnerStatus(true); }
+static void btnBurnerOnClick() { setBurnerStatus(true); }
 
 static void btnMenuOnClick() {
   if (currentPage == SETTINGS && isDeepMenuOpen) {
@@ -72,7 +72,9 @@ void btnSetup() {
   Btn::minus.setDebounceMs(debounce);
 #ifdef BURNER_BTN
   Btn::burner_btn.setDebounceMs(debounce);
-  Btn::burner_btn.attachLongPressStart(btnBurner);
+  Btn::burner_btn.attachLongPressStart(btnBurnerOnClick);
+  attachInterrupt(digitalPinToInterrupt(BURNER_BTN_PIN), btnBurnerOnClick,
+                  FALLING);
 #endif
   // Btn::menu.attachClick (btnMenuOnClick);
   Btn::menu.attachLongPressStart(btnMenuLongPress);

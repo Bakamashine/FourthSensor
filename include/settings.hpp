@@ -16,7 +16,8 @@ inline int uTemp = DEF_USER_TEMP;
 // inline bool burnStatus = false;
 inline float hyst = DEFAULT_HYSTERESIS;
 #ifdef ENABLE_BURNER
-inline bool burnerStatus = false;
+volatile inline bool burnerStatus = false;
+volatile inline bool manualBurnerStatus = false;
 void setBurnerStatus(bool);
 #endif
 

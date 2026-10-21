@@ -100,6 +100,7 @@ void writeDefaultValue(Sensors* sns) {
 
 #ifdef ENABLE_BURNER
 void setBurnerStatus(bool st) {
+  manualBurnerStatus = true;
   burnerStatus = st;
   digitalWrite(BURNER_PIN, st);
 }

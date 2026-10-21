@@ -15,6 +15,10 @@ static constexpr int ignition_sp_delay = 1000 * 3;  // 3 sec
 static constexpr int ignition_delay =
     ignition_fp_delay + ignition_sp_delay;  // 5 sec
 static constexpr int pilot_delay = 1000 * 5;
+static constexpr int pilot_valve_delay = 1000 * 3;      // pilot valve on time
+static constexpr int pilot_valve_off_delay = 1000 * 2;  // pilot valve off time
+static constexpr int burner_sensor_window = 1000 * 5;   // burner signal search
+static constexpr int burner_sensor_step = 250;
 
 static bool _vent_status = false;
 static bool _ign_trans = false;
@@ -54,10 +58,10 @@ static void ventilation() {
 // yellow led
 static void pilotValve() {
   changeStatus(&_pil_val, PILOT_PIN);
-  burnerDelay(3000);
+  burnerDelay(pilot_valve_delay);
   changeStatus(&_ign_trans, IGN_PIN);
   // burnerDelay(pilot_delay);
-  burnerDelay(2000);
+  burnerDelay(pilot_valve_off_delay);
   changeStatus(&_pil_val, PILOT_PIN);
 }
 
@@ -72,12 +76,10 @@ static void ignitionTransformer() {
 // green led
 static void burnerSensor() {
   changeStatus(&_bur_sens, BURNER_SENSOR_LED_PIN);
-  auto mil = millis();
-  constexpr int one_step = 2000 / 4;
 
   bool s = false;
-  for (unsigned long i = 0; i < mil; i += one_step) {
-    burnerDelay(one_step);
+  for (int i = 0; i < burner_sensor_window; i += burner_sensor_step) {
+    burnerDelay(burner_sensor_step);
     if (getBurnerStatus()) {
       s = true;
       break;
@@ -87,17 +89,15 @@ static void burnerSensor() {
   if (s) isBurnerReady = true;
 }
 void burnerSystem() {
-  if (!Sens::first.ready || !Sens::second.ready || !Sens::third.ready ||
-      !Sens::fourth.ready)
-    return;
+  if (manualBurnerStatus) return;
 
-  if (checkTemp(&Sens::all)) {
-    burnerStatus = true;
-    digitalWrite(BURNER_PIN, HIGH);
-  } else {
-    burnerStatus = false;
-    digitalWrite(BURNER_PIN, LOW);
-  }
+  if (!getReadySensors(&Sens::all)) return;
+  // if (!Sens::first.ready || !Sens::second.ready || !Sens::third.ready ||
+  //     !Sens::fourth.ready)
+  //   return;
+
+  burnerStatus = checkTemp(&Sens::all);
+  digitalWrite(BURNER_PIN, burnerStatus);
 }
 
 void prepare() {
@@ -105,6 +105,7 @@ void prepare() {
     ventilation();
     ignitionTransformer();
     burnerSensor();
+    if (isBurnerReady) return;
   }
   if (!isBurnerReady) Val::errorCode = 301;
 }

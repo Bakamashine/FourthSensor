@@ -73,6 +73,12 @@ void setup() {
   ledSetup();
 #endif
   _EEPROM::readFromEEPROM();
+
+  // btnTickBurner();
+
+#ifdef BURNER_PREPARE
+  Burner::prepare();
+#endif
   wdt_enable(WDTO_4S);
 }
 
@@ -81,31 +87,34 @@ void loop() {
   ledDebug();
 #endif
   wdt_reset();
-  btnTickBurner();
 
-#ifdef BURNER_PREPARE
-  Burner::prepare();
-#endif
 #ifdef ENABLE_VALIDATE
   Val::checkError();
   if (!Val::systemHalted) {
 #endif
 
-    sensorSetup();  // only once
-    btnTick();
-    sensorsLoop();
+#ifdef BURNER_PREPARE
+    if (Burner::isBurnerReady) {
+#endif
+      sensorSetup();  // only once, after the burner check passed
+      btnTick();
+      sensorsLoop();
 
 #ifdef DS18_SENSOR
-    readFromDS18();
+      readFromDS18();
 #endif
 
 #ifdef DEBUG
-    debugPrint();
+      debugPrint();
 #endif
 
 #ifdef ENABLE_COMMANDS
-    handleCommand();
+      handleCommand();
 #endif
+#ifdef BURNER_PREPARE
+    }
+#endif
+
 #ifdef ENABLE_VALIDATE
   }
 #endif
