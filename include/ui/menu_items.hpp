@@ -16,7 +16,7 @@ struct MenuItem {
 void buildItems(Sensors *sns);
 inline int _baseMenuSelected = 0;
 namespace DeepMenu {
-inline float _hyst = hyst;
+inline int _hyst = hyst;
 #ifdef ENABLE_VALIDATE
 inline int _minTemp = minPermOffset;
 inline int _maxTemp = maxPermOffset;

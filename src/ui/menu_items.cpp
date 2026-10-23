@@ -54,11 +54,11 @@ void buildOtherDeepMenu() {
                                        .preview = "Hyst",
                                        .target = &hyst,
                                        .sn = nullptr,
-                                       .kind = DeepMenu::FLOAT,
-                                       .step = 0.01F,
-                                       .fsave_func = _EEPROM::writeHyst,
-                                       .save_func = nullptr,
-                                       .min = 0.0F,
+                                       .kind = DeepMenu::INT,
+                                       .step = 1,
+                                       .fsave_func = nullptr,
+                                       .save_func = _EEPROM::writeHyst,
+                                       .min = 0,
                                        .max = 10,
                                        .dirty = false};
 #ifdef ENABLE_VALIDATE

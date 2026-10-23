@@ -1,7 +1,7 @@
 #pragma once
 
 #define DEFAULT_USER_TEMP 50
-#define DEFAULT_HYSTERESIS 0.07F
+#define DEFAULT_HYSTERESIS 10
 
 /// settings
 #define ENABLE_COMMANDS

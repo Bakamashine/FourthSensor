@@ -44,7 +44,7 @@ const char *_secondSlice;
 void help() {
   Serial.println(F("ALL COMMANDS:"));
   Serial.println(F("help              - show this list"));
-  Serial.println(F("hyst=<float>      - set burner hysteresis"));
+  Serial.println(F("hyst=<int>        - set burner hysteresis"));
   Serial.println(F("esN=<int>         - set sensor N (1..4) ema_k"));
 #ifdef ENABLE_VALIDATE
   Serial.println(F("max=<int>         - set max permitted offset"));
@@ -70,10 +70,10 @@ void runCmd(char *cmd, Sensors *sns) {
   PRINT_DEBUG("First=", _firstSlice);
   PRINT_DEBUG("Second=", _secondSlice);
 #endif
-  // hyst=<float> - set the burner hysteresis deadband
+  // hyst=<int> - set the burner hysteresis deadband
   int second_slice_value = atoi(_secondSlice);
   if (strcmp(_firstSlice, "hyst") == 0) {
-    hyst = atof(_secondSlice);
+    hyst = second_slice_value;
     _EEPROM::writeHyst(hyst);
 #ifdef DEBUG_COMMAND
     Serial.println("RUN    hyst applied");

@@ -14,7 +14,7 @@ inline int minPermOffset = DEF_MIN_PERM_OFFSET;
 inline int uTemp = DEF_USER_TEMP;
 #endif
 // inline bool burnStatus = false;
-inline float hyst = DEFAULT_HYSTERESIS;
+inline int hyst = DEFAULT_HYSTERESIS;
 #ifdef ENABLE_BURNER
 volatile inline bool burnerStatus = false;
 volatile inline bool manualBurnerStatus = false;
@@ -30,7 +30,7 @@ void readMaxPermOffset();
 void writeUserTemp(int);
 void readUserTemp();
 #endif
-void writeHyst(float);
+void writeHyst(int);
 void readHyst();
 
 // main method for reading from eeprom

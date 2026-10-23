@@ -7,12 +7,12 @@
 namespace _EEPROM {
 
 // hysteresis
-void writeHyst(float _hyst) { EEPROM.put(ADDR_HYST, _hyst); }
+void writeHyst(int _hyst) { EEPROM.put(ADDR_HYST, _hyst); }
 
 void readHyst() {
-  float v = 0;
+  int v = 0;
   EEPROM.get(ADDR_HYST, v);
-  if (v <= 0.0F || v > 100.0F) return;
+  if (v <= 0 || v > 100) return;
   hyst = v;
 }
 
