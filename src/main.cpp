@@ -76,9 +76,6 @@ void setup() {
 
   // btnTickBurner();
 
-#ifdef BURNER_PREPARE
-  Burner::prepare();
-#endif
   wdt_enable(WDTO_4S);
 }
 
@@ -87,7 +84,9 @@ void loop() {
   ledDebug();
 #endif
   wdt_reset();
-
+#ifdef BURNER_PREPARE
+  Burner::prepare();
+#endif
 #ifdef ENABLE_VALIDATE
   Val::checkError();
   if (!Val::systemHalted) {

@@ -5,6 +5,7 @@
 #include "constants/pin.hpp"
 #include "sensor.hpp"
 #include "settings.hpp"
+#include "ui/main_ui.hpp"
 #include "validate.hpp"
 
 #define ATTEMPTS 5
@@ -19,11 +20,6 @@ static constexpr int pilot_valve_delay = 1000 * 3;      // pilot valve on time
 static constexpr int pilot_valve_off_delay = 1000 * 2;  // pilot valve off time
 static constexpr int burner_sensor_window = 1000 * 2;   // burner signal search
 static constexpr int burner_sensor_step = burner_sensor_window / 5;
-
-static bool _vent_status = false;
-static bool _ign_trans = false;
-static bool _pil_val = false;
-static bool _bur_sens = false;
 
 namespace Burner {
 bool getBurnerStatus() { return static_cast<bool>(digitalRead(BURNER_PIN)); }
@@ -40,10 +36,12 @@ static void changeStatus(bool *p_st, int pin) {
   digitalWrite(pin, *p_st);
 }
 
-// blocking delay that keeps feeding the watchdog (< WDTO_4S)
+// blocking delay that keeps feeding the watchdog (< WDTO_4S) and refreshing the
+// start page, so the prepare sequence is visible on the display
 static void burnerDelay(int ms) {
   for (int elapsed = 0; elapsed < ms; elapsed += 250) {
     wdt_reset();
+    UI::draw();
     delay(250);
   }
 }
@@ -67,11 +65,13 @@ static void checkNoFlame() {
 }
 
 static void checkFlamePresent() {
+  loop_bur_sens = true;
   if (flameDetected()) isBurnerReady = true;
 }
 
 // blue led
 static void ventilation() {
+  loop_vent_status = true;
   changeStatus(&_vent_status, VENT_LED_PIN);
   burnerDelay(vent_delay);
   changeStatus(&_vent_status, VENT_LED_PIN);
@@ -79,6 +79,7 @@ static void ventilation() {
 
 // yellow led
 static void pilotValve() {
+  loop_pil_val = true;
   changeStatus(&_pil_val, PILOT_PIN);
   burnerDelay(pilot_valve_delay);
   changeStatus(&_ign_trans, IGN_PIN);
@@ -89,6 +90,7 @@ static void pilotValve() {
 
 // white led
 static void ignitionTransformer() {
+  loop_ign_trans = true;
   changeStatus(&_ign_trans, IGN_PIN);
   burnerDelay(ignition_fp_delay);
   pilotValve();
@@ -104,19 +106,34 @@ void burnerSystem() {
   digitalWrite(BURNER_PIN, burnerStatus);
 }
 
-void prepare() {
-  for (unsigned int i = 0; i < ATTEMPTS; i++) {
-    ventilation();
-    checkNoFlame();
-    // error
-    if (Val::errorCode > 0) return;
-    ignitionTransformer();
-    checkFlamePresent();
-
-    // success
-    if (isBurnerReady && Val::errorCode == 0) break;
-  }
-
-  if (!isBurnerReady && Val::errorCode == 0) Val::errorCode = 301;
+static void clearStatusLoop() {
+  loop_vent_status = false;
+  loop_ign_trans = false;
+  loop_pil_val = false;
+  loop_bur_sens = false;
 }
+void prepare() {
+  if (Val::errorCode == 0 && !burner_checked) {
+    for (unsigned int i = 0; i < ATTEMPTS; i++) {
+      ventilation();
+      checkNoFlame();
+      // error
+      if (Val::errorCode > 0) return;
+      ignitionTransformer();
+      checkFlamePresent();
+
+      // success
+      if (isBurnerReady && Val::errorCode == 0) {
+        UI::closeStartPage();
+        burner_checked = true;
+        break;
+      }
+
+      clearStatusLoop();
+    }
+
+    if (!isBurnerReady && Val::errorCode == 0) Val::errorCode = 301;
+  }
+}
+
 }  // namespace Burner

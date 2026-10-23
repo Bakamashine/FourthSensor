@@ -3,11 +3,11 @@
 #define _CENTER_X(display, text) ((OLED_WIDTH - display->getStrWidth(text)) / 2)
 #define _CENTER_Y(display) ((OLED_HEIGHT + display->getFontAscent()) / 2 - 25)
 
-#define RAW_WRITE_ROW(row, text, v1, v2, p_cls)               \
+#define RAW_WRITE_ROW(row, text, v1, v2, d_p_cls)               \
   do {                                                        \
-    if (text) (p_cls)->drawStr(U8G2_FIRST_COLUMN, row, text); \
-    if (v1) (p_cls)->drawStr(U8G2_SECOND_COLUMN, row, v1);    \
-    if (v2) (p_cls)->drawStr(U8G2_THIRD_COLUMN, row, v2);     \
+    if (text) (d_p_cls)->drawStr(U8G2_FIRST_COLUMN, row, text); \
+    if (v1) (d_p_cls)->drawStr(U8G2_SECOND_COLUMN, row, v1);    \
+    if (v2) (d_p_cls)->drawStr(U8G2_THIRD_COLUMN, row, v2);     \
   } while (0)
 
 // display temperature as number

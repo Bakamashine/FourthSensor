@@ -26,4 +26,8 @@
 #define PREVIEW_S4 "Fourth sensor"
 #define PREVIEW_OTHER "Other settings"
 
-// #endif
+// start page
+#define PREVIEW_VENT "VENT"
+#define PREVIEW_IGN "TR_IGN"
+#define PREVIEW_PIL "PIL_VAL"
+#define PREVIEW_BUR "BUR"

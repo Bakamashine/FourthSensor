@@ -1,5 +1,6 @@
 #include "ui/main_ui.hpp"
 
+#include "burner.hpp"
 #include "contest.hpp"
 #include "helper.hpp"
 #include "macro/ui.hpp"
@@ -44,11 +45,27 @@ void mainPage(U8G2 *display, Sensors *sns) {
 #endif
 }
 
+void startPage(U8G2 *d) {
+  RAW_WRITE_ROW(U8G2_MAIN_ROW(0), PREVIEW_VENT, YES_OR_NO(loop_vent_status),
+                nullptr, d);
+  RAW_WRITE_ROW(U8G2_MAIN_ROW(1), PREVIEW_IGN, YES_OR_NO(loop_ign_trans),
+                nullptr, d);
+  RAW_WRITE_ROW(U8G2_MAIN_ROW(2), PREVIEW_PIL, YES_OR_NO(loop_pil_val), nullptr,
+                d);
+  RAW_WRITE_ROW(U8G2_MAIN_ROW(3), PREVIEW_BUR, YES_OR_NO(loop_bur_sens),
+                nullptr, d);
+}
+
+void closeStartPage() { currentPage = MAIN; }
+
 void draw() {
   u8g2.firstPage();
   do {
     u8g2.setFont(FONT);
     switch (currentPage) {
+      case START:
+        startPage(&u8g2);
+        break;
       case MAIN:
         mainPage(&u8g2, &Sens::all);
         break;
