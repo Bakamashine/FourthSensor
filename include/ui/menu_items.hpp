@@ -32,15 +32,13 @@ struct DeepMenuItem {
   int row;
   const char *preview;
   void *target;
-  Sensor *sn;
+  // Sensor *sn;
   VALUE_TYPE kind;
   float step;
-  // void (*write_func)(void *value, int delta, DeepMenuItem *it);
-  void (*fsave_func)(float);
+  // void (*fsave_func)(float);
   void (*save_func)(int);
   float min;
   float max;
-  // int addr;
   bool dirty;
 };
 void writeFunc(void *value, int delta, DeepMenuItem &it);

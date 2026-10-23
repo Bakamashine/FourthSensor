@@ -13,7 +13,6 @@ inline int maxPermOffset = DEF_MAX_PERM_OFFSET;
 inline int minPermOffset = DEF_MIN_PERM_OFFSET;
 inline int uTemp = DEF_USER_TEMP;
 #endif
-// inline bool burnStatus = false;
 inline int hyst = DEFAULT_HYSTERESIS;
 #ifdef ENABLE_BURNER
 volatile inline bool burnerStatus = false;

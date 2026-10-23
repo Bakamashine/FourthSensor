@@ -53,16 +53,18 @@ int checkTemperature(Sensors *sn) {
   float averageVal = getFAverageTemp(sn);
 
   // the bounds themselves are valid readings, so compare strictly
-  if (maxPermOffset < averageVal) {
+  if (maxPermOffset - hyst < averageVal) {
     return 201;  // average too hot
   }
-  if (minPermOffset > averageVal) {
+  if (minPermOffset + hyst > averageVal) {
     return 202;  // average too cold
   }
 #endif
 
   return 0;  // no error
 }
+
+
 
 void pipeline(Sensors *sns) {
   if (!getReadySensors(sns) || errorCode > 0) return;

@@ -13,12 +13,12 @@
 using namespace DeepMenu;
 
 namespace DeepMenu {
-static int sensEepromAddr(Sensor* sn) {
-  if (sn == &Sens::first) return ADDR_SENS1_SETTINGS;
-  if (sn == &Sens::second) return ADDR_SENS2_SETTINGS;
-  if (sn == &Sens::third) return ADDR_SENS3_SETTINGS;
-  return ADDR_SENS4_SETTINGS;
-}
+// static int sensEepromAddr(Sensor* sn) {
+//   if (sn == &Sens::first) return ADDR_SENS1_SETTINGS;
+//   if (sn == &Sens::second) return ADDR_SENS2_SETTINGS;
+//   if (sn == &Sens::third) return ADDR_SENS3_SETTINGS;
+//   return ADDR_SENS4_SETTINGS;
+// }
 
 void writeFunc(void* value, int delta, DeepMenu::DeepMenuItem& it) {
   if (!value) return;
@@ -38,25 +38,25 @@ void writeFunc(void* value, int delta, DeepMenu::DeepMenuItem& it) {
       const float next = *val + dir * it.step;
       if (next < it.min || next > it.max) return;
       *val = next;
-      if (it.fsave_func != nullptr) it.fsave_func(*val);
+      // if (it.fsave_func != nullptr) it.fsave_func(*val);
       break;
     }
 
     default:
       return;
   }
-  if (it.sn != nullptr) writeSensSett(&it.sn->settings, sensEepromAddr(it.sn));
+  // if (it.sn != nullptr) writeSensSett(&it.sn->settings, sensEepromAddr(it.sn));
 }
 
 void buildOtherDeepMenu() {
   int count = 0;
   DeepMenu::_deepMenuItems[count++] = {.row = U8G2_FIRST_ROW,
-                                       .preview = "Hyst",
+                                       .preview = "DEL",
                                        .target = &hyst,
-                                       .sn = nullptr,
+                                       // .sn = nullptr,
                                        .kind = DeepMenu::INT,
                                        .step = 1,
-                                       .fsave_func = nullptr,
+                                       // .fsave_func = nullptr,
                                        .save_func = _EEPROM::writeHyst,
                                        .min = 0,
                                        .max = 10,
@@ -66,10 +66,10 @@ void buildOtherDeepMenu() {
       .row = U8G2_SECOND_ROW,
       .preview = "Max",
       .target = &maxPermOffset,
-      .sn = nullptr,
+      // .sn = nullptr,
       .kind = DeepMenu::INT,
       .step = 1,
-      .fsave_func = nullptr,
+      // .fsave_func = nullptr,
       .save_func = _EEPROM::writeMaxPermOffset,
       .min = static_cast<float>(minPermOffset) + 1,
       .max = MAX_PERM_OFFSET,
@@ -78,10 +78,10 @@ void buildOtherDeepMenu() {
       .row = U8G2_THIRD_ROW,
       .preview = "Min",
       .target = &minPermOffset,
-      .sn = nullptr,
+      // .sn = nullptr,
       .kind = DeepMenu::INT,
       .step = 1,
-      .fsave_func = nullptr,
+      // .fsave_func = nullptr,
       .save_func = _EEPROM::writeMinPermOffset,
       .min = MIN_PERM_OFFSET,
       .max = static_cast<float>(maxPermOffset) - 1,
@@ -91,10 +91,10 @@ void buildOtherDeepMenu() {
       .row = lastRow,
       .preview = "UserT",
       .target = &uTemp,
-      .sn = nullptr,
+      // .sn = nullptr,
       .kind = DeepMenu::INT,
       .step = 1,
-      .fsave_func = nullptr,
+      // .fsave_func = nullptr,
       .save_func = _EEPROM::writeUserTemp,
       .min = static_cast<float>(minPermOffset) + hyst + 1,
       .max = static_cast<float>(maxPermOffset) - hyst - 1,
@@ -104,18 +104,19 @@ void buildOtherDeepMenu() {
 }
 
 void buildSensorDeepMenu(Sensor* sensor) {
-  DeepMenu::_deepMenuCount = 1;
-  DeepMenu::_deepMenuItems[0] = {.row = U8G2_FIRST_ROW,
-                                 .preview = "EMA",
-                                 .target = &sensor->settings.ema_k,
-                                 .sn = sensor,
-                                 .kind = DeepMenu::INT,
-                                 .step = 1,
-                                 .fsave_func = nullptr,
-                                 .save_func = nullptr,
-                                 .min = 1,
-                                 .max = 10,
-                                 .dirty = false};
+  // per-sensor EMA (ema_k) editing is disabled for now
+  DeepMenu::_deepMenuCount = 0;
+  // DeepMenu::_deepMenuItems[0] = {.row = U8G2_FIRST_ROW,
+  //                                .preview = "EMA",
+  //                                .target = &sensor->settings.ema_k,
+  //                                .sn = sensor,
+  //                                .kind = DeepMenu::INT,
+  //                                .step = 1,
+  //                                .fsave_func = nullptr,
+  //                                .save_func = nullptr,
+  //                                .min = 1,
+  //                                .max = 10,
+  //                                .dirty = false};
 }
 
 }  // namespace DeepMenu

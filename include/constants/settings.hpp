@@ -8,7 +8,7 @@
 // #define SHOW_START_WINDOW
 #define ENABLE_VALIDATE
 #define ENABLE_BURNER
-// #define ENABLE_SETTINGS
+#define ENABLE_SETTINGS
 
 #define VIA_RESISTANCE 0
 #define VIA_ACP 1
