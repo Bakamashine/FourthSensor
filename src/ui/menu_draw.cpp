@@ -2,18 +2,10 @@
 
 #include <Arduino.h>
 
-#include "constants/settings.hpp"
 #include "constants/ui.hpp"
-#include "contest.hpp"
-#include "helper.hpp"
-#include "macro/ui.hpp"
-#include "sensor.hpp"
-#include "settings.hpp"
-#include "ui/menu.hpp"
+#include "ui/menu_items.hpp"
 
-using namespace DeepMenu;
-
-static void formatDeepValue(const DeepMenuItem &item, char *buf) {
+static void formatValue(const MenuItem &item, char *buf) {
   if (item.target == nullptr) {
     buf[0] = '\0';
     return;
@@ -25,49 +17,20 @@ static void formatDeepValue(const DeepMenuItem &item, char *buf) {
   }
 }
 
-void drawDeepMenu(U8G2 *display, const DeepMenu::DeepMenuItem *items, int count,
-                  int selected) {
-  for (int i = 0; i < count; i++) {
-    const DeepMenuItem &item = items[i];
-    char buf[10];
-    formatDeepValue(item, buf);
-    display->drawStr(U8G2_FIRST_COLUMN, item.row, item.preview);
-    display->drawStr(U8G2_SECOND_COLUMN, item.row, buf);
-    if (i == selected) display->drawStr(U8G2_MENU_MARKER_X, item.row, ">");
-  }
-}
-
-void drawBaseMenu(U8G2 *display, const MenuItem *items, int count,
-                  int selected) {
-  for (int i = 0; i < count; i++)
-    display->drawStr(U8G2_FIRST_COLUMN, items[i].row, items[i].preview);
-
-  if (selected < 0 || selected >= count) return;
-  const MenuItem &item = items[selected];
-  display->drawStr(item.marker, item.row, ">");
-}
-
-void drawDeepMenu(U8G2 *display) {
-  for (int i = 0; i < _deepMenuCount; i++) {
-    const DeepMenuItem &item = _deepMenuItems[i];
-    char buf[10];
-    formatDeepValue(item, buf);
-    display->drawStr(U8G2_FIRST_COLUMN, item.row, item.preview);
-    display->drawStr(U8G2_SECOND_COLUMN, item.row, buf);
-    if (i == _deepMenuSelected)
-      display->drawStr(U8G2_MENU_MARKER_X, item.row, ">");
-  }
-}
-
 void drawItems(U8G2 *ds) {
-  for (int i = 0; i < MENU_ITEMS_COUNT; i++) {
+  for (int i = 0; i < _itemsCount; i++) {
     const MenuItem &item = _items[i];
+    char buf[10];
+    formatValue(item, buf);
     ds->drawStr(U8G2_FIRST_COLUMN, item.row, item.preview);
+    ds->drawStr(U8G2_SECOND_COLUMN, item.row, buf);
   }
+
+  if (isValueOpen) ds->drawStr(U8G2_EDIT_X, U8G2_EDIT_Y, "ON");
 }
 
 void drawMarker(U8G2 *ds) {
-  if (_baseMenuSelected < 0 || _baseMenuSelected >= MENU_ITEMS_COUNT) return;
+  if (_baseMenuSelected < 0 || _baseMenuSelected >= _itemsCount) return;
   const MenuItem &item = _items[_baseMenuSelected];
-  ds->drawStr(item.marker, item.row, ">");
+  ds->drawStr(U8G2_MENU_MARKER_X, item.row, ">");
 }

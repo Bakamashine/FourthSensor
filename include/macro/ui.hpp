@@ -4,7 +4,7 @@
 #define _CENTER_Y(display) ((OLED_HEIGHT + display->getFontAscent()) / 2 - 25)
 
 #define RAW_WRITE_ROW(row, text, v1, v2, d_p_cls)               \
-  do {                                                        \
+  do {                                                          \
     if (text) (d_p_cls)->drawStr(U8G2_FIRST_COLUMN, row, text); \
     if (v1) (d_p_cls)->drawStr(U8G2_SECOND_COLUMN, row, v1);    \
     if (v2) (d_p_cls)->drawStr(U8G2_THIRD_COLUMN, row, v2);     \

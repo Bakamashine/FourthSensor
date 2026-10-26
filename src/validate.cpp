@@ -64,8 +64,6 @@ int checkTemperature(Sensors *sn) {
   return 0;  // no error
 }
 
-
-
 void pipeline(Sensors *sns) {
   if (!getReadySensors(sns) || errorCode > 0) return;
 

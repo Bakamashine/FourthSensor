@@ -219,6 +219,7 @@ void sensorSetup() {
   // changeEmaK();
 
   // read eeprom
+#ifdef SENSOR_SETT
   readSensSett(&Sens::first.settings, ADDR_SENS1_SETTINGS);
   readSensSett(&Sens::second.settings, ADDR_SENS2_SETTINGS);
   readSensSett(&Sens::third.settings, ADDR_SENS3_SETTINGS);
@@ -228,6 +229,7 @@ void sensorSetup() {
   Sens::second.ema.setK(static_cast<uint8_t>(Sens::second.settings.ema_k));
   Sens::third.ema.setK(static_cast<uint8_t>(Sens::third.settings.ema_k));
   Sens::fourth.ema.setK(static_cast<uint8_t>(Sens::fourth.settings.ema_k));
+#endif
 #endif
 }
 
@@ -243,6 +245,7 @@ float readFromDS18() {
 
 #endif
 
+#ifdef SENSOR_SETT
 void writeSensSett(SensorSettings *ss, int addr) { EEPROM.put(addr, *ss); }
 
 void readSensSett(SensorSettings *ss, int addr) {
@@ -250,3 +253,4 @@ void readSensSett(SensorSettings *ss, int addr) {
   EEPROM.get(addr, stored);
   if (stored.addr_magic == SENS_SETTINGS_MAGIC) *ss = stored;
 }
+#endif

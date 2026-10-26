@@ -4,7 +4,7 @@
 #include "sensor.hpp"
 #define DEF_MAX_PERM_OFFSET 50
 #define DEF_MIN_PERM_OFFSET 10
-#define DEF_USER_TEMP 40
+#define DEF_USER_TEMP 30
 #define MAX_PERM_OFFSET 100
 #define MIN_PERM_OFFSET -34
 
@@ -14,6 +14,12 @@ inline int minPermOffset = DEF_MIN_PERM_OFFSET;
 inline int uTemp = DEF_USER_TEMP;
 #endif
 inline int hyst = DEFAULT_HYSTERESIS;
+
+#ifdef ENABLE_VALIDATE
+// user temperature must stay away from the permitted bounds by the hysteresis
+inline int minUserTemp() { return minPermOffset + hyst + 1; }
+inline int maxUserTemp() { return maxPermOffset - hyst - 1; }
+#endif
 #ifdef ENABLE_BURNER
 volatile inline bool burnerStatus = false;
 volatile inline bool manualBurnerStatus = false;

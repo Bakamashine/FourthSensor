@@ -24,7 +24,6 @@ void handleCommand();
 #include "burner.hpp"
 #endif
 #include "led.hpp"
-using namespace DeepMenu;
 
 void debugPrint() {
   Serial.println("=====DEBUG INPUT====");
@@ -50,9 +49,9 @@ void debugPrint() {
 #endif
 
   PRINT_DEBUG("[SETTINGS_H] Hysteresis: ", hyst);
-  PRINT_DEBUG("[MENU_UI_H] isValueOpen: ", isDeepMenuOpen);
+  PRINT_DEBUG("[MENU_UI_H] isValueOpen: ", isValueOpen);
   PRINT_DEBUG("[MENU_UI_H] _baseMenuSelected: ", _baseMenuSelected);
-  PRINT_DEBUG("[MENU_UI_H] _deepMenuSelected: ", _deepMenuSelected);
+  PRINT_DEBUG("[MENU_UI_H] _itemsCount: ", _itemsCount);
   PRINT_DEBUG("[PAGE_H] currentPage: ", currentPage);
 #ifdef ENABLE_VALIDATE
   PRINT_DEBUG("[ERROR_H] errorCode: ", Val::errorCode);

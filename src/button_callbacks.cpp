@@ -6,20 +6,24 @@
 #include "ui/menu_items.hpp"
 #include "validate.hpp"
 
-using namespace DeepMenu;
-
 static void btnBurnerOnClick() { setBurnerStatus(true); }
 
+// MAIN:      long press menu -> open settings
+// SETTINGS:  click +/-       -> move selection
+//            long press +    -> enter edit mode
+//            long press -    -> leave edit mode
+//            in edit mode +/- -> change the selected value
+//            long menu        -> close edit mode / leave settings
 static void btnMenuOnClick() {
-  if (currentPage == SETTINGS && isDeepMenuOpen) {
-    isDeepMenuOpen = false;
+  if (currentPage == SETTINGS && isValueOpen) {
+    isValueOpen = false;
     return;
   }
   if (currentPage == SETTINGS) {
     exitMenu();
   }
   currentPage = currentPage == MAIN ? SETTINGS : MAIN;
-  isDeepMenuOpen = false;
+  isValueOpen = false;
 }
 
 void btnTick() {
@@ -35,33 +39,29 @@ void btnTickBurner() {
 }
 
 static void btnPlusLongPress() {
-  if (currentPage != SETTINGS) return;
-  if (!isDeepMenuOpen) {
-    isDeepMenuOpen = true;
-    _deepMenuSelected = 0;
-  } else {
-    menuSelectPrev();
-  }
+  if (currentPage == SETTINGS) isValueOpen = true;
 }
 
 static void btnPlusOneClick() {
-  if (currentPage == SETTINGS && !isDeepMenuOpen) {
-    menuSelectPrev();
-  } else if (currentPage == SETTINGS && isDeepMenuOpen) {
+  if (currentPage != SETTINGS) return;
+  if (isValueOpen)
     menuPageIncreaseValue();
-  }
+  else
+    menuSelectPrev();
 }
+
 static void btnMenuLongPress() { btnMenuOnClick(); }
 
 static void btnMinusOneClick() {
-  if (currentPage == SETTINGS && !DeepMenu::isDeepMenuOpen) {
-    menuSelectNext();
-  } else if (currentPage == SETTINGS && isDeepMenuOpen) {
+  if (currentPage != SETTINGS) return;
+  if (isValueOpen)
     menuPageDecreaseValue();
-  }
+  else
+    menuSelectNext();
 }
+
 static void btnMinusLongPress() {
-  if (currentPage == SETTINGS && isDeepMenuOpen) menuSelectNext();
+  if (currentPage == SETTINGS) isValueOpen = false;
 }
 
 void btnSetup() {
@@ -70,13 +70,17 @@ void btnSetup() {
   Btn::menu.setDebounceMs(debounce);
   Btn::plus.setDebounceMs(debounce);
   Btn::minus.setDebounceMs(debounce);
+  // fire every click immediately so repeated +/- presses are not swallowed as
+  // a double click
+  Btn::menu.setClickMs(0);
+  Btn::plus.setClickMs(0);
+  Btn::minus.setClickMs(0);
 #ifdef BURNER_BTN
   Btn::burner_btn.setDebounceMs(debounce);
   Btn::burner_btn.attachLongPressStart(btnBurnerOnClick);
   attachInterrupt(digitalPinToInterrupt(BURNER_BTN_PIN), btnBurnerOnClick,
                   FALLING);
 #endif
-  // Btn::menu.attachClick (btnMenuOnClick);
   Btn::menu.attachLongPressStart(btnMenuLongPress);
   Btn::plus.attachClick(btnPlusOneClick);
   Btn::plus.attachLongPressStart(btnPlusLongPress);

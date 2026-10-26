@@ -1,7 +1,6 @@
 #pragma once
 #include "sensor.hpp"
-#define YES_OR_NO(value)  \
-  value ? "yes" : "no"
+#define YES_OR_NO(value) value ? "yes" : "no"
 
 /**
  *     Vent 5 sec

@@ -2,49 +2,25 @@
 #include "sensor.hpp"
 #include "settings.hpp"
 
-#define MENU_ITEMS_COUNT 5
-#define MAX_DEEP_ITEMS 4
-#define INT_SUMMAND 1
-#define F_SUMMAND 0.01F
-struct MenuItem {
-  int row;
-  int marker;
-  const char *preview;
-  Sensor *sensor;
-};
-
-void buildItems(Sensors *sns);
-inline int _baseMenuSelected = 0;
-namespace DeepMenu {
-inline int _hyst = hyst;
-#ifdef ENABLE_VALIDATE
-inline int _minTemp = minPermOffset;
-inline int _maxTemp = maxPermOffset;
-inline int _uTemp = uTemp;
-#endif
-inline int _deepMenuCount = 0;
-inline int _deepMenuSelected = 0;
+#define MAX_SETTINGS_ITEMS 4
 
 enum VALUE_TYPE { INT, FLOAT };
-void buildSensorDeepMenu(Sensor *);
-void buildOtherDeepMenu();
-struct DeepMenuItem {
+
+struct MenuItem {
   int row;
   const char *preview;
   void *target;
-  // Sensor *sn;
   VALUE_TYPE kind;
   float step;
-  // void (*fsave_func)(float);
   void (*save_func)(int);
   float min;
   float max;
-  bool dirty;
 };
-void writeFunc(void *value, int delta, DeepMenuItem &it);
 
-inline DeepMenuItem _deepMenuItems[MAX_DEEP_ITEMS];
-inline bool isDeepMenuOpen = false;
-}  // namespace DeepMenu
+void buildItems(Sensors *sns);
+void writeFunc(void *value, int delta, MenuItem &it);
 
-inline MenuItem _items[MENU_ITEMS_COUNT];
+inline MenuItem _items[MAX_SETTINGS_ITEMS];
+inline int _itemsCount = 0;
+inline int _baseMenuSelected = 0;
+inline bool isValueOpen = false;

@@ -17,6 +17,7 @@
 #define MIN_CORRECT_INT (-50)
 #define MAX_CORRECT_INT 50
 
+#ifdef SENSOR_SETT
 #define SENS_SETTINGS_MAGIC 0x5A02
 
 struct SensorSettings {
@@ -24,6 +25,8 @@ struct SensorSettings {
       SENS_SETTINGS_MAGIC;  ///< validity marker, written as-is
   int ema_k = DEF_EMA_K;
 };
+#endif
+
 struct Sensor {
   unsigned int acp;  ///< ADC count (0-1023) after the acp filters
   int lastAcp = -1;  ///< Last accepted raw ADC, -1 until the first reading
@@ -36,6 +39,7 @@ struct Sensor {
   float lastTemp;  ///< Last accepted temperature value
   bool ready;      ///< true once the first sample produced a value
 
+#ifdef SENSOR_SETT
   /**
    * SensorSettings contains the correct integer value for temperature
    * compensation. if the temperature is higher (e.g >50 C), highCorInt is used
@@ -43,6 +47,7 @@ struct Sensor {
    * if the temperature is lower (e.g <-10 C), coolCorInt is used
    */
   SensorSettings settings;
+#endif
 
 #if defined(MEDIAN_FILTER) || defined(EMA_FILTER)
   bool filterReady = false;  ///< true once the acp filters were primed
@@ -82,6 +87,7 @@ float getFAverageTemp(Sensors *sens);
 float readFromDS18();
 #endif
 
+#ifdef SENSOR_SETT
 // write sensor settings to eeprom memory
 void writeSensSett(SensorSettings *, int addr);
 
@@ -89,6 +95,7 @@ void writeSensSett(SensorSettings *, int addr);
 void readSensSett(SensorSettings *ss, int addr);
 
 void writeEMA_KSett(SensorSettings *ss, int ema_k, int addr);
+#endif
 
 namespace Sens {
 inline Sensor first;

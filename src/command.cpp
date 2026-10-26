@@ -11,6 +11,7 @@
 #include "macro/debugUi.hpp"
 #include "settings.hpp"
 
+#ifdef SENSOR_SETT
 /**
  *
  * @param cmd_name   command name
@@ -29,6 +30,7 @@
     writeSensSett(&(sensor_ptr)->settings, eeprom_addr);              \
     _DEBUG_SENSOR_CMD(debug_msg);                                     \
   }
+#endif
 
 #ifdef DEBUG_COMMAND
 #define _DEBUG_SENSOR_CMD(msg) Serial.println(msg)
@@ -45,7 +47,9 @@ void help() {
   Serial.println(F("ALL COMMANDS:"));
   Serial.println(F("help              - show this list"));
   Serial.println(F("hyst=<int>        - set burner hysteresis"));
+#ifdef SENSOR_SETT
   Serial.println(F("esN=<int>         - set sensor N (1..4) ema_k"));
+#endif
 #ifdef ENABLE_VALIDATE
   Serial.println(F("max=<int>         - set max permitted offset"));
   Serial.println(F("min=<int>         - set min permitted offset"));
@@ -85,7 +89,7 @@ void runCmd(char *cmd, Sensors *sns) {
    * Second: s - setting
    * Third: <int> - number sensor
    */
-
+#ifdef SENSOR_SETT
   SENSOR_SETTINGS_CMD("es1", sns->_s_first, ema_k, ADDR_SENS1_SETTINGS,
                       "Run es1 applied")
   SENSOR_SETTINGS_CMD("es2", sns->_s_second, ema_k, ADDR_SENS2_SETTINGS,
@@ -94,6 +98,7 @@ void runCmd(char *cmd, Sensors *sns) {
                       "RUN es3 applied")
   SENSOR_SETTINGS_CMD("es4", sns->_s_fourth, ema_k, ADDR_SENS4_SETTINGS,
                       "RUN es4 applied")
+#endif
 
 #ifdef ENABLE_VALIDATE
   // max=<int> - set the maximum permitted offset

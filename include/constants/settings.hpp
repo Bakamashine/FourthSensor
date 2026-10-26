@@ -2,6 +2,8 @@
 
 #define DEFAULT_USER_TEMP 50
 #define DEFAULT_HYSTERESIS 10
+#define MIN_HYSTERESIS 1
+#define MAX_HYSTERESIS 100
 
 /// settings
 #define ENABLE_COMMANDS
@@ -9,6 +11,11 @@
 #define ENABLE_VALIDATE
 #define ENABLE_BURNER
 #define ENABLE_SETTINGS
+
+/// per-sensor settings (EEPROM records and the `esN` commands).
+/// Sensors have no settings at the moment; define SENSOR_SETT to restore the
+/// old sensor-settings implementation once sensors get their own fields.
+// #define SENSOR_SETT
 
 #define VIA_RESISTANCE 0
 #define VIA_ACP 1
