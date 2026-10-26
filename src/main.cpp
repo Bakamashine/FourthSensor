@@ -66,14 +66,11 @@ void setup() {
   Wire.setWireTimeout(3000, true);
   UI::u8g2.begin();
 
-  // sensorSetup();
   btnSetup();
 #ifdef LED_BUILD_STATUS
   ledSetup();
 #endif
   _EEPROM::readFromEEPROM();
-
-  // btnTickBurner();
 
   wdt_enable(WDTO_4S);
 }
@@ -83,8 +80,10 @@ void loop() {
   ledDebug();
 #endif
   wdt_reset();
+#ifndef LED_DEBUG
 #ifdef BURNER_PREPARE
   Burner::prepare();
+#endif
 #endif
 #ifdef ENABLE_VALIDATE
   Val::checkError();
@@ -92,7 +91,7 @@ void loop() {
 #endif
 
 #ifdef BURNER_PREPARE
-    if (Burner::isBurnerReady) {
+    if (suc_prep && Burner::isBurnerReady) {
 #endif
       sensorSetup();  // only once, after the burner check passed
       btnTick();
@@ -120,7 +119,7 @@ void loop() {
 
 #ifdef ENABLE_VALIDATE
   // validate
-  Val::pipeline(&Sens::all);
+  Val::pipeline(Sens::all);
 #endif
 
 #ifdef ENABLE_BURNER

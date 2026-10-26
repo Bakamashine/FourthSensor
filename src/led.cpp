@@ -9,6 +9,7 @@ void ledDebug() {
     digitalWrite(IGN_PIN, status);
     digitalWrite(PILOT_PIN, !status);
     digitalWrite(BURNER_SENSOR_LED_PIN, status);
+    digitalWrite(SQUIB_LED_PIN, !status);
     delay(200);
     status = true;
   }
@@ -26,4 +27,5 @@ void ledSetup() {
   pinMode(IGN_PIN, OUTPUT);
   pinMode(PILOT_PIN, OUTPUT);
   pinMode(BURNER_SENSOR_LED_PIN, OUTPUT);
+  pinMode(SQUIB_LED_PIN, OUTPUT);
 }

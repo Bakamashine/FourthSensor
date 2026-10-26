@@ -17,7 +17,7 @@ struct MenuItem {
   float max;
 };
 
-void buildItems(Sensors *sns);
+void buildItems(Sensors &sns);
 void writeFunc(void *value, int delta, MenuItem &it);
 
 inline MenuItem _items[MAX_SETTINGS_ITEMS];

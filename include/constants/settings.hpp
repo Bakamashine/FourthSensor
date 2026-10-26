@@ -12,9 +12,6 @@
 #define ENABLE_BURNER
 #define ENABLE_SETTINGS
 
-/// per-sensor settings (EEPROM records and the `esN` commands).
-/// Sensors have no settings at the moment; define SENSOR_SETT to restore the
-/// old sensor-settings implementation once sensors get their own fields.
 // #define SENSOR_SETT
 
 #define VIA_RESISTANCE 0
@@ -24,7 +21,7 @@
 
 #define BURNER_PREPARE
 
-#define BURNER_BTN
+#define SQUIB_BTN
 #define LED_BUILD_STATUS
 
 #define MEDIAN_FILTER

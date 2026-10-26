@@ -15,17 +15,16 @@
  *
  */
 
+namespace Squib {
+bool getSquibStatus();
+void run(bool st = true);
+};  // namespace Squib
+
 namespace Burner {
 
 void burnerSystem();
-bool checkTemp(Sensors *sn);
-bool getBurnerStatus();
+bool checkUTemp(Sensors &sn);
 inline bool isBurnerReady = false;
-// extern unsigned int _startMil;
-
-/**
- * Only delay (for default 5 sec)
- */
 
 void prepare();
 
@@ -36,7 +35,8 @@ inline bool _ign_trans = false;
 inline bool _pil_val = false;
 inline bool _bur_sens = false;
 
-inline bool burner_checked = false;
+// successful prepare
+inline bool suc_prep = false;
 
 // for gui
 inline bool loop_vent_status = false;

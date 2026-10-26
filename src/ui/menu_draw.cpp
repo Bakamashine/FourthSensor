@@ -17,20 +17,20 @@ static void formatValue(const MenuItem &item, char *buf) {
   }
 }
 
-void drawItems(U8G2 *ds) {
+void drawItems(U8G2 &ds) {
   for (int i = 0; i < _itemsCount; i++) {
     const MenuItem &item = _items[i];
     char buf[10];
     formatValue(item, buf);
-    ds->drawStr(U8G2_FIRST_COLUMN, item.row, item.preview);
-    ds->drawStr(U8G2_SECOND_COLUMN, item.row, buf);
+    ds.drawStr(U8G2_FIRST_COLUMN, item.row, item.preview);
+    ds.drawStr(U8G2_SECOND_COLUMN, item.row, buf);
   }
 
-  if (isValueOpen) ds->drawStr(U8G2_EDIT_X, U8G2_EDIT_Y, "ON");
+  if (isValueOpen) ds.drawStr(U8G2_EDIT_X, U8G2_EDIT_Y, "ON");
 }
 
-void drawMarker(U8G2 *ds) {
+void drawMarker(U8G2 &ds) {
   if (_baseMenuSelected < 0 || _baseMenuSelected >= _itemsCount) return;
   const MenuItem &item = _items[_baseMenuSelected];
-  ds->drawStr(U8G2_MENU_MARKER_X, item.row, ">");
+  ds.drawStr(U8G2_MENU_MARKER_X, item.row, ">");
 }

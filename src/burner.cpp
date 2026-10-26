@@ -21,27 +21,35 @@ static constexpr int pilot_valve_off_delay = 1000 * 2;  // pilot valve off time
 static constexpr int burner_sensor_window = 1000 * 2;   // burner signal search
 static constexpr int burner_sensor_step = burner_sensor_window / 5;
 
-namespace Burner {
-bool getBurnerStatus() { return static_cast<bool>(digitalRead(BURNER_PIN)); }
-
-bool checkTemp(Sensors *sn) {
-  if (Val::errorCode > 0) return false;
-  int averageTemp = getIAverageTemp(sn);
-  if (averageTemp - hyst <= uTemp) return true;
-  return false;
-}
-
-static void changeStatus(bool *p_st, int pin, bool *st = nullptr) {
-  if (st == nullptr) {
-    *p_st = !(*p_st);
-  } else {
-    *p_st = *st;
+namespace Squib {
+bool getSquibStatus() { return static_cast<bool>(digitalRead(SQUIB_LED_PIN)); }
+void run(bool st) {
+  if (Val::systemHalted) {
+    digitalWrite(SQUIB_LED_PIN, false);
+    return;
   }
-  digitalWrite(pin, *p_st);
+
+  if (!suc_prep)
+    digitalWrite(SQUIB_LED_PIN, st);
+  else
+    digitalWrite(SQUIB_LED_PIN, false);
+}
+};  // namespace Squib
+namespace Burner {
+bool checkUTemp(Sensors &sns) {
+  if (Val::errorCode > 0) return false;
+  return getIAverageTemp(sns) - hyst <= uTemp;
 }
 
-// blocking delay that keeps feeding the watchdog (< WDTO_4S) and refreshing the
-// start page, so the prepare sequence is visible on the display
+static void changeStatus(bool &p_st, int pin, bool *st = nullptr) {
+  if (st == nullptr) {
+    p_st = !(p_st);
+  } else {
+    p_st = *st;
+  }
+  digitalWrite(pin, p_st);
+}
+
 static void burnerDelay(int ms) {
   for (int elapsed = 0; elapsed < ms; elapsed += 250) {
     wdt_reset();
@@ -50,64 +58,61 @@ static void burnerDelay(int ms) {
   }
 }
 
-static bool flameDetected() {
-  changeStatus(&_bur_sens, BURNER_SENSOR_LED_PIN);
+static bool squibDetected() {
+  changeStatus(_bur_sens, BURNER_SENSOR_LED_PIN);
   bool flameSeen = false;
   for (int i = 0; i < 5; i++) {
     burnerDelay(burner_sensor_step);
-    if (getBurnerStatus()) {
+    if (Squib::getSquibStatus()) {
       flameSeen = true;
       break;
     }
   }
-  changeStatus(&_bur_sens, BURNER_SENSOR_LED_PIN);
+  changeStatus(_bur_sens, BURNER_SENSOR_LED_PIN);
   return flameSeen;
 }
 
-static void checkNoFlame() {
-  if (flameDetected()) Val::errorCode = 302;
+static void checkNoSquib() {
+  if (squibDetected()) Val::errorCode = 302;
 }
 
-static void checkFlamePresent() {
+static void checkSquibPresent() {
   loop_bur_sens = true;
-  if (flameDetected()) isBurnerReady = true;
+  if (squibDetected()) isBurnerReady = true;
 }
 
 // blue led
 static void ventilation() {
   loop_vent_status = true;
-  changeStatus(&_vent_status, VENT_LED_PIN);
+  changeStatus(_vent_status, VENT_LED_PIN);
   burnerDelay(vent_delay);
-  changeStatus(&_vent_status, VENT_LED_PIN);
+  changeStatus(_vent_status, VENT_LED_PIN);
 }
 
 // yellow led
 static void pilotValve() {
   loop_pil_val = true;
-  changeStatus(&_pil_val, PILOT_PIN);
+  changeStatus(_pil_val, PILOT_PIN);
   burnerDelay(pilot_valve_delay);
-  changeStatus(&_ign_trans, IGN_PIN);
-  // burnerDelay(pilot_delay);
+  changeStatus(_ign_trans, IGN_PIN);
   burnerDelay(pilot_valve_off_delay);
-  changeStatus(&_pil_val, PILOT_PIN);
+  changeStatus(_pil_val, PILOT_PIN);
 }
 
 // white led
 static void ignitionTransformer() {
   loop_ign_trans = true;
-  changeStatus(&_ign_trans, IGN_PIN);
+  changeStatus(_ign_trans, IGN_PIN);
   burnerDelay(ignition_fp_delay);
   pilotValve();
-  // changeStatus(&_ign_trans, IGN_PIN);
 }
 
 void burnerSystem() {
-  if (manualBurnerStatus) return;
+  if (!getReadySensors(Sens::all)) return;
 
-  if (!getReadySensors(&Sens::all)) return;
-
-  burnerStatus = checkTemp(&Sens::all);
+  burnerStatus = checkUTemp(Sens::all);
   digitalWrite(BURNER_PIN, burnerStatus);
+  if (burnerStatus) Squib::run(false);
 }
 
 static void clearStatusLoop() {
@@ -116,20 +121,29 @@ static void clearStatusLoop() {
   loop_pil_val = false;
   loop_bur_sens = false;
 }
+
+static void runBurner(Sensors &sns) {
+  if (suc_prep && Squib::getSquibStatus() &&
+      Val::pipelineWithoutHalt(sns) > 0) {
+    digitalWrite(BURNER_PIN, HIGH);
+    Squib::run(false);
+  }
+}
 void prepare() {
-  if (Val::errorCode == 0 && !burner_checked) {
+  if (Val::errorCode == 0 && !suc_prep) {
     for (unsigned int i = 0; i < ATTEMPTS; i++) {
       ventilation();
-      checkNoFlame();
+      checkNoSquib();
       // error
       if (Val::errorCode > 0) return;
       ignitionTransformer();
-      checkFlamePresent();
+      checkSquibPresent();
 
       // success
       if (isBurnerReady && Val::errorCode == 0) {
         UI::closeStartPage();
-        burner_checked = true;
+        suc_prep = true;
+        runBurner(Sens::all);
         break;
       }
 

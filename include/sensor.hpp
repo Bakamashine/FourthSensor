@@ -68,20 +68,20 @@ struct Sensors {
   Sensor *_s_fourth;  ///< Pointer to fourth sensor structure
 };
 
-float getTemp(Sensor *);
-void constrSensor(Sensor *, uint8_t pin);
-void sensorFilterInit(Sensor *sensor, uint8_t pin);
+float getTemp(Sensor &);
+void constrSensor(Sensor &, uint8_t pin);
+void sensorFilterInit(Sensor &sensor, uint8_t pin);
 
 void sensorsLoop();
 void sensorSetup();
 void DS18Setup();
-bool getReadySensors(Sensors *sn);
+bool getReadySensors(Sensors &sn);
 
 int16_t ntcTempAt(size_t i);
 NTCLIST_VA_TYPE ntcValAt(size_t i);
 
-int getIAverageTemp(Sensors *sens);
-float getFAverageTemp(Sensors *sens);
+int getIAverageTemp(Sensors &sens);
+float getFAverageTemp(Sensors &sens);
 
 #ifdef DS18_SENSOR
 float readFromDS18();
@@ -89,12 +89,11 @@ float readFromDS18();
 
 #ifdef SENSOR_SETT
 // write sensor settings to eeprom memory
-void writeSensSett(SensorSettings *, int addr);
+void writeSensSett(SensorSettings &, int addr);
 
 // get the struct from eeprom memory
-void readSensSett(SensorSettings *ss, int addr);
+void readSensSett(SensorSettings &ss, int addr);
 
-void writeEMA_KSett(SensorSettings *ss, int ema_k, int addr);
 #endif
 
 namespace Sens {

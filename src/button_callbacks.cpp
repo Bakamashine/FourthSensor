@@ -1,19 +1,14 @@
 #include "button_callbacks.hpp"
 
+#include "burner.hpp"
 #include "constants/pin.hpp"
 #include "page.hpp"
 #include "ui/menu.hpp"
 #include "ui/menu_items.hpp"
 #include "validate.hpp"
 
-static void btnBurnerOnClick() { setBurnerStatus(true); }
+static void btnSquibOnClick() { Squib::run(!digitalRead(SQUIB_LED_PIN)); }
 
-// MAIN:      long press menu -> open settings
-// SETTINGS:  click +/-       -> move selection
-//            long press +    -> enter edit mode
-//            long press -    -> leave edit mode
-//            in edit mode +/- -> change the selected value
-//            long menu        -> close edit mode / leave settings
 static void btnMenuOnClick() {
   if (currentPage == SETTINGS && isValueOpen) {
     isValueOpen = false;
@@ -30,12 +25,6 @@ void btnTick() {
   Btn::menu.tick();
   Btn::plus.tick();
   Btn::minus.tick();
-}
-
-void btnTickBurner() {
-#ifdef BURNER_BTN
-  Btn::burner_btn.tick();
-#endif
 }
 
 static void btnPlusLongPress() {
@@ -70,15 +59,14 @@ void btnSetup() {
   Btn::menu.setDebounceMs(debounce);
   Btn::plus.setDebounceMs(debounce);
   Btn::minus.setDebounceMs(debounce);
-  // fire every click immediately so repeated +/- presses are not swallowed as
-  // a double click
   Btn::menu.setClickMs(0);
   Btn::plus.setClickMs(0);
   Btn::minus.setClickMs(0);
-#ifdef BURNER_BTN
-  Btn::burner_btn.setDebounceMs(debounce);
-  Btn::burner_btn.attachLongPressStart(btnBurnerOnClick);
-  attachInterrupt(digitalPinToInterrupt(BURNER_BTN_PIN), btnBurnerOnClick,
+#ifdef SQUIB_BTN
+  pinMode(SQUIB_LED_PIN, OUTPUT);
+  Btn::squib_btn.setDebounceMs(debounce);
+  // Btn::squib_btn.attachLongPressStart(btnSquibOnClick);
+  attachInterrupt(digitalPinToInterrupt(SQUIB_BTN_PIN), btnSquibOnClick,
                   FALLING);
 #endif
   Btn::menu.attachLongPressStart(btnMenuLongPress);

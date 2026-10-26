@@ -4,5 +4,5 @@
 
 #include "sensor.hpp"
 namespace UI {
-void errorPage(U8G2 *display, int error_code);
+void errorPage(U8G2 &display, int error_code);
 }

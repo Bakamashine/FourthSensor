@@ -30,7 +30,7 @@ void writeFunc(void *value, int delta, MenuItem &it) {
   }
 }
 
-void buildItems(Sensors *sensors) {
+void buildItems(Sensors &sensors) {
   (void)sensors;
   int count = 0;
 

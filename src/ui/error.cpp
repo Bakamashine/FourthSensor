@@ -5,7 +5,7 @@
 #include "ui/helper.hpp"
 
 namespace UI {
-void errorPage(U8G2 *d, int error_code) {
+void errorPage(U8G2 &d, int error_code) {
   if (error_code <= 0) {
     currentPage = MAIN;
     return;

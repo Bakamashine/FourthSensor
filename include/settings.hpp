@@ -22,8 +22,6 @@ inline int maxUserTemp() { return maxPermOffset - hyst - 1; }
 #endif
 #ifdef ENABLE_BURNER
 volatile inline bool burnerStatus = false;
-volatile inline bool manualBurnerStatus = false;
-void setBurnerStatus(bool);
 #endif
 
 namespace _EEPROM {
@@ -41,5 +39,5 @@ void readHyst();
 // main method for reading from eeprom
 void readFromEEPROM();
 
-void writeDefaultValue(Sensors*);
+void writeDefaultValue(Sensors &);
 }  // namespace _EEPROM

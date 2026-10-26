@@ -4,7 +4,7 @@
 
 #include "sensor.hpp"
 
-void menuPage(U8G2 *display, Sensors *sensors);
+void menuPage(U8G2 &display, Sensors &sensors);
 void menuPageIncreaseValue();
 void menuPageDecreaseValue();
 void menuSelectNext();

@@ -27,7 +27,7 @@
                             debug_msg)                                \
   else if (strcmp(_firstSlice, cmd_name) == 0) {                      \
     (sensor_ptr)->settings.field = second_slice_value;                \
-    writeSensSett(&(sensor_ptr)->settings, eeprom_addr);              \
+    writeSensSett((sensor_ptr)->settings, eeprom_addr);               \
     _DEBUG_SENSOR_CMD(debug_msg);                                     \
   }
 #endif
@@ -68,7 +68,7 @@ int tryParse(char *cmd) {
 
   return 1;
 }
-void runCmd(char *cmd, Sensors *sns) {
+void runCmd(char *cmd, Sensors &sns) {
 #ifdef DEBUG_COMMAND
   PRINT_DEBUG("Before cmd=", cmd);
   PRINT_DEBUG("First=", _firstSlice);
@@ -90,13 +90,13 @@ void runCmd(char *cmd, Sensors *sns) {
    * Third: <int> - number sensor
    */
 #ifdef SENSOR_SETT
-  SENSOR_SETTINGS_CMD("es1", sns->_s_first, ema_k, ADDR_SENS1_SETTINGS,
+  SENSOR_SETTINGS_CMD("es1", sns._s_first, ema_k, ADDR_SENS1_SETTINGS,
                       "Run es1 applied")
-  SENSOR_SETTINGS_CMD("es2", sns->_s_second, ema_k, ADDR_SENS2_SETTINGS,
+  SENSOR_SETTINGS_CMD("es2", sns._s_second, ema_k, ADDR_SENS2_SETTINGS,
                       "RUN es2 applied")
-  SENSOR_SETTINGS_CMD("es3", sns->_s_third, ema_k, ADDR_SENS3_SETTINGS,
+  SENSOR_SETTINGS_CMD("es3", sns._s_third, ema_k, ADDR_SENS3_SETTINGS,
                       "RUN es3 applied")
-  SENSOR_SETTINGS_CMD("es4", sns->_s_fourth, ema_k, ADDR_SENS4_SETTINGS,
+  SENSOR_SETTINGS_CMD("es4", sns._s_fourth, ema_k, ADDR_SENS4_SETTINGS,
                       "RUN es4 applied")
 #endif
 
@@ -126,7 +126,7 @@ void runCmd(char *cmd, Sensors *sns) {
   else Serial.println("RUN    no branch matched");
 #endif
 }
-void readCommandAndImpl(char *cmd, Sensors *sensors) {
+void readCommandAndImpl(char *cmd, Sensors &sensors) {
   if (strlen(cmd) == 0) return;
 #ifdef DEBUG_COMMAND
   PRINT_DEBUG("Read command: ", cmd);
@@ -158,7 +158,7 @@ void handleCommand() {
       cmd[i++] = ch;
     }
     cmd[i] = '\0';
-    readCommandAndImpl(cmd, &Sens::all);
+    readCommandAndImpl(cmd, Sens::all);
   }
 }
 

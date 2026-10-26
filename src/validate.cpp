@@ -9,7 +9,7 @@
 #define PERMITTED_TEMP_DIFFERENCE 5
 
 namespace Val {
-int checkSensors(Sensors *sn) {
+int checkSensors(Sensors &sn) {
   /*
   codes:
   100 - all sensors agree
@@ -19,38 +19,12 @@ int checkSensors(Sensors *sn) {
   104 - fourth sensor is defective
 
   */
-  // if (sn->_s_second->temp + PERMITTED_TEMP_DIFFERENCE <= sn->_s_first->temp
-  // ||
-  //     sn->_s_third->temp + PERMITTED_TEMP_DIFFERENCE <= sn->_s_first->temp ||
-  //     sn->_s_fourth->temp + PERMITTED_TEMP_DIFFERENCE <= sn->_s_first->temp)
-  //     {
-  //   return 101;
-  // }
-  // if (sn->_s_first->temp + PERMITTED_TEMP_DIFFERENCE <= sn->_s_second->temp
-  // ||
-  //     sn->_s_third->temp + PERMITTED_TEMP_DIFFERENCE <= sn->_s_second->temp
-  //     || sn->_s_fourth->temp + PERMITTED_TEMP_DIFFERENCE <=
-  //     sn->_s_second->temp) {
-  //   return 102;
-  // }
-  // if (sn->_s_first->temp + PERMITTED_TEMP_DIFFERENCE <= sn->_s_third->temp ||
-  //     sn->_s_second->temp + PERMITTED_TEMP_DIFFERENCE <= sn->_s_third->temp
-  //     || sn->_s_fourth->temp + PERMITTED_TEMP_DIFFERENCE <=
-  //     sn->_s_fourth->temp) {
-  //   return 103;
-  // }
-  // if (sn->_s_first->temp + PERMITTED_TEMP_DIFFERENCE <= sn->_s_fourth->temp
-  // ||
-  //     sn->_s_second->temp + PERMITTED_TEMP_DIFFERENCE <= sn->_s_fourth->temp
-  //     || sn->_s_third->temp + PERMITTED_TEMP_DIFFERENCE <=
-  //     sn->_s_fourth->temp)
-  //   return 104;
   return 0;  // no error
 }
 
-int checkTemperature(Sensors *sn) {
+int checkTemp(Sensors &sns) {
 #ifdef ENABLE_VALIDATE
-  float averageVal = getFAverageTemp(sn);
+  float averageVal = getFAverageTemp(sns);
 
   // the bounds themselves are valid readings, so compare strictly
   if (maxPermOffset - hyst < averageVal) {
@@ -64,21 +38,26 @@ int checkTemperature(Sensors *sn) {
   return 0;  // no error
 }
 
-void pipeline(Sensors *sns) {
-  if (!getReadySensors(sns) || errorCode > 0) return;
-
+static int basePipeline(Sensors &sns) {
+  if (!getReadySensors(sns) || errorCode > 0) return 0;
   int sensor_code = checkSensors(sns);
-  int temperature_code = checkTemperature(sns);
+  int temperature_code = checkTemp(sns);
 
+  int ret_code = 0;
   if (sensor_code > 0)
-    errorCode = sensor_code;
+    ret_code = sensor_code;
   else if (temperature_code > 0)
-    errorCode = temperature_code;
-  else
-    errorCode = 0;
+    ret_code = temperature_code;
 
+  return ret_code;
+}
+
+void pipeline(Sensors &sns) {
+  errorCode = basePipeline(sns);
   if (errorCode > 0) return haltSystem();
 }
+
+int pipelineWithoutHalt(Sensors &sns) { return basePipeline(sns); }
 
 void haltSystem() {
   if (!systemHalted) {
