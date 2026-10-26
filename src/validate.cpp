@@ -53,8 +53,11 @@ static int basePipeline(Sensors &sns) {
 }
 
 void pipeline(Sensors &sns) {
-  errorCode = basePipeline(sns);
-  if (errorCode > 0) return haltSystem();
+  int code = basePipeline(sns);
+  if (code > 0) {
+    errorCode = code;
+    haltSystem();
+  }
 }
 
 int pipelineWithoutHalt(Sensors &sns) { return basePipeline(sns); }
