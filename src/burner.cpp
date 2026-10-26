@@ -31,8 +31,12 @@ bool checkTemp(Sensors *sn) {
   return false;
 }
 
-static void changeStatus(bool *p_st, int pin) {
-  *p_st = !(*p_st);
+static void changeStatus(bool *p_st, int pin, bool *st = nullptr) {
+  if (st == nullptr) {
+    *p_st = !(*p_st);
+  } else {
+    *p_st = *st;
+  }
   digitalWrite(pin, *p_st);
 }
 
