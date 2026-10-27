@@ -16,12 +16,8 @@ inline int uTemp = DEF_USER_TEMP;
 inline int hyst = DEFAULT_HYSTERESIS;
 
 #ifdef ENABLE_VALIDATE
-// user temperature must stay away from the permitted bounds by the hysteresis
 inline int minUserTemp() { return minPermOffset + hyst + 1; }
 inline int maxUserTemp() { return maxPermOffset - hyst - 1; }
-#endif
-#ifdef ENABLE_BURNER
-volatile inline bool burnerStatus = false;
 #endif
 
 namespace _EEPROM {

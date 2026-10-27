@@ -22,7 +22,7 @@ void run(bool st = true);
 
 namespace Burner {
 
-void burnerSystem();
+void standard_runBurn();
 bool checkUTemp(Sensors &sn);
 inline bool isBurnerReady = false;
 

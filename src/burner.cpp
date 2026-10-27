@@ -38,7 +38,7 @@ void run(bool st) {
 namespace Burner {
 bool checkUTemp(Sensors &sns) {
   if (Val::errorCode > 0) return false;
-  return getIAverageTemp(sns) - hyst <= uTemp;
+  return getIAverageTemp(sns) <= uTemp - hyst;
 }
 
 static void changeStatus(bool &p_st, int pin, bool *st = nullptr) {
@@ -107,12 +107,12 @@ static void ignitionTransformer() {
   pilotValve();
 }
 
-void burnerSystem() {
+void standard_runBurn() {
   if (!getReadySensors(Sens::all)) return;
 
-  burnerStatus = checkUTemp(Sens::all);
-  digitalWrite(BURNER_PIN, burnerStatus);
-  if (burnerStatus) Squib::run(false);
+  bool uTemp_st = checkUTemp(Sens::all);
+  digitalWrite(BURNER_PIN, uTemp_st);
+  if (uTemp_st) Squib::run(false);
 }
 
 static void clearStatusLoop() {
@@ -122,9 +122,9 @@ static void clearStatusLoop() {
   loop_bur_sens = false;
 }
 
-static void runBurner(Sensors &sns) {
+static void runBurn(Sensors &sns) {
   if (suc_prep && Squib::getSquibStatus() &&
-      Val::pipelineWithoutHalt(sns) > 0) {
+      Val::pipelineWithoutHalt(sns) > 0 && checkUTemp(sns)) {
     digitalWrite(BURNER_PIN, HIGH);
   }
   Squib::run(false);
@@ -143,7 +143,7 @@ void prepare() {
       if (isBurnerReady && Val::errorCode == 0) {
         UI::closeStartPage();
         suc_prep = true;
-        runBurner(Sens::all);
+        runBurn(Sens::all);
         break;
       }
 

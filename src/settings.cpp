@@ -10,7 +10,10 @@ namespace _EEPROM {
 // keep the user temperature inside the editable range after another setting
 // changed its bounds
 static void clampUserTemp() {
+  // min user temperature
   const int lo = minUserTemp();
+
+  // max user temperature
   const int hi = maxUserTemp();
   if (lo > hi || (uTemp >= lo && uTemp <= hi)) return;
   uTemp = (uTemp < lo) ? lo : hi;
@@ -91,7 +94,7 @@ void readUserTemp() {
   const int hi = maxUserTemp();
   if (lo > hi) {
     // hysteresis leaves no room for a valid user temperature
-    uTemp = (minPermOffset + maxPermOffset) / 2;
+    uTemp = (minPermOffset + maxPermOffset) >> 1;
     return;
   }
   if (v < lo || v > hi)

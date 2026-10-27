@@ -74,7 +74,6 @@ void haltSystem() {
     digitalWrite(BURNER_SENSOR_LED_PIN, LOW);
 #endif
     digitalWrite(ERROR_PIN, HIGH);
-    burnerStatus = false;
   }
   systemHalted = 1;
   currentPage = ERROR;

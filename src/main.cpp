@@ -42,12 +42,7 @@ void debugPrint() {
   PRINT_DEBUG("[TEMP] DS18: ", Sens::ds18Temp);
 #endif
 
-// other variables
-#ifdef ENABLE_BURNER
-  PRINT_DEBUG("[SETTINGS_H] burnerStatus: ", burnerStatus);
-
-#endif
-
+  // other variables
   PRINT_DEBUG("[SETTINGS_H] Hysteresis: ", hyst);
   PRINT_DEBUG("[MENU_UI_H] isValueOpen: ", isValueOpen);
   PRINT_DEBUG("[MENU_UI_H] _baseMenuSelected: ", _baseMenuSelected);
@@ -123,6 +118,6 @@ void loop() {
 #endif
 
 #ifdef ENABLE_BURNER
-  if (!Val::systemHalted) Burner::burnerSystem();
+  if (!Val::systemHalted) Burner::standard_runBurn();
 #endif
 }

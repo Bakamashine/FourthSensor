@@ -11,8 +11,8 @@
 #include "constants/pin.hpp"
 #include "constants/settings.hpp"
 #include "helper.hpp"
+#include "macro/bit.hpp"
 #include "settings.hpp"
-
 #define MAX_ACP 1023
 
 #if TEMP_CALCULATION_VARIANT == VIA_RESISTANCE
@@ -21,9 +21,9 @@
   (RESISTOR_FROM_SENSOR * static_cast<float>(value) / (MAX_ACP - value))
 #endif
 
-#define ADC_SAMPLES 8  // raw reads averaged into one sample
+#define ACP_SAMPLES 8  // raw reads averaged into one sample
 
-#define PERM_DIF 100
+#define ACP_PERM_DIF 50
 #define SPIKE_LIMIT 3
 
 float getTempFromTable(Sensor &);
@@ -38,22 +38,18 @@ NTCLIST_VA_TYPE ntcValAt(size_t i) {
   return v;
 }
 
-static float returnTempWithCorInt(float temp, Sensor &sensor) { return temp; };
-
 float getTemp(Sensor &sensor) {
   float average = getTempFromTable(sensor);
 
   if (!sensor.ready) {
-    sensor.lastTemp = average;
+    sensor.temp = average;
     sensor.ready = true;
-    return returnTempWithCorInt(sensor.lastTemp, sensor);
-  }
-  //TODO
-  if (average - sensor.lastTemp > hyst/2  || sensor.lastTemp - average > hyst/2) {
-    sensor.lastTemp = average;
+    return sensor.temp;
   }
 
-  return returnTempWithCorInt(sensor.lastTemp, sensor);
+  sensor.temp = average;
+
+  return sensor.temp;
 }
 
 float getTempFromTable(Sensor &sensor) {
@@ -69,17 +65,26 @@ float getTempFromTable(Sensor &sensor) {
 
   int32_t v1 = static_cast<int32_t>(ntcValAt(idx));
   int32_t v2 = static_cast<int32_t>(ntcValAt(idx + 1));
-  int16_t t1 = ntcTempAt(idx);
-  int16_t t2 = ntcTempAt(idx + 1);
+  int32_t t1 = ntcTempAt(idx);
+  int32_t t2 = ntcTempAt(idx + 1);
 
   int32_t dv = v2 - v1;
   if (dv == 0) return static_cast<float>(t1);
 
   int32_t dx = static_cast<int32_t>(val) - v1;
 
-  // T = t1 + (t2 - t1) * dx / dv
-  int32_t num = (static_cast<int32_t>(t2 - t1) * 10) * dx;
-  int32_t t_x10 = static_cast<int32_t>(t1) * 10 + (num + dv / 2) / dv;
+  // protection against segment boundary violations
+  int32_t lo = (dv < 0) ? dv : 0;
+  int32_t hi = (dv < 0) ? 0 : dv;
+  if (dx < lo) dx = lo;
+  if (dx > hi) dx = hi;
+
+  // T = t1 + (t2 - t1) * dx / dv,
+  int32_t dt10 = MUL10(t2 - t1);
+  int32_t num = dt10 * dx;
+
+  int32_t t_x10 = MUL10(t1) + (num + dv / 2) / dv;
+
   return t_x10 * 0.1F;
 }
 
@@ -94,31 +99,30 @@ void sensorFilterInit(Sensor &sensor, uint8_t pin) {
 
 void constrSensor(Sensor &sensor, uint8_t pin) {
   uint32_t sum = 0;
-  for (uint8_t i = 0; i < ADC_SAMPLES; i++) sum += analogRead(pin);
-  int acp = static_cast<int>(sum / ADC_SAMPLES);
+  for (uint8_t i = 0; i < ACP_SAMPLES; i++) sum += analogRead(pin);
+  int av_acp = static_cast<int>(sum / ACP_SAMPLES);
 
   // accepting a spike
-  if (sensor.lastAcp >= 0 && abs(acp - sensor.lastAcp) > PERM_DIF) {
+  if (sensor.lastAcp >= 0 && abs(av_acp - sensor.lastAcp) > ACP_PERM_DIF) {
     if (sensor.spikeCount < SPIKE_LIMIT) {
       sensor.spikeCount++;
-      return;
+      av_acp = sensor.lastAcp;
+      // return;
     }
-    // TODO
-    sensor.spikeCount = 0;
   } else {
     sensor.spikeCount = 0;
   }
-  sensor.lastAcp = acp;
+  sensor.lastAcp = av_acp;
 
 #if defined(MEDIAN_FILTER) || defined(EMA_FILTER)
   if (!sensor.filterReady) {
 #ifdef MEDIAN_FILTER
     if (sensor.median.numNodes != 0)
       for (uint8_t i = 0; i < WINDOW_SIZE; i++)
-        MEDIANFILTER_Insert(&sensor.median, acp);
+        MEDIANFILTER_Insert(&sensor.median, av_acp);
 #endif
 #ifdef EMA_FILTER
-    sensor.ema.reset(acp);
+    sensor.ema.reset(av_acp);
 #endif
     sensor.filterReady = true;
   }
@@ -127,8 +131,8 @@ void constrSensor(Sensor &sensor, uint8_t pin) {
 #if defined(EMA_FILTER) && defined(MEDIAN_FILTER)
   uint16_t med =
       sensor.median.numNodes != 0
-          ? static_cast<uint16_t>(MEDIANFILTER_Insert(&sensor.median, acp))
-          : static_cast<uint16_t>(acp);
+          ? static_cast<uint16_t>(MEDIANFILTER_Insert(&sensor.median, av_acp))
+          : static_cast<uint16_t>(av_acp);
   sensor.acp = sensor.ema.filter(med);
 #elif defined(EMA_FILTER)
   sensor.acp = sensor.ema.filter(acp);
@@ -153,8 +157,9 @@ void constrSensor(Sensor &sensor, uint8_t pin) {
 int getIAverageTemp(Sensors &sn) {
   int temp[] = {static_cast<int>(sn._s_first->temp),
                 static_cast<int>(sn._s_second->temp),
-                static_cast<int>(sn._s_third->temp)};
-  return IntegerGetAverageValue(temp, 3);
+                static_cast<int>(sn._s_third->temp),
+                static_cast<int>(sn._s_fourth->temp)};
+  return IntegerGetAverageValue(temp, sizeof(temp) / sizeof(temp[0]));
 }
 
 float getFAverageTemp(Sensors &sn) {

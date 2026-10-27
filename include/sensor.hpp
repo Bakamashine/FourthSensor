@@ -35,9 +35,9 @@ struct Sensor {
 #if TEMP_CALCULATION_VARIANT == VIA_RESISTANCE
   float resist;  ///< Calculated sensor resistance in ohms
 #endif
-  uint8_t pin;     ///< Analog pin the sensor is connected to
-  float lastTemp;  ///< Last accepted temperature value
-  bool ready;      ///< true once the first sample produced a value
+  uint8_t pin;  ///< Analog pin the sensor is connected to
+  // float lastTemp;  ///< Last accepted temperature value
+  bool ready;  ///< true once the first sample produced a value
 
 #ifdef SENSOR_SETT
   /**

@@ -1,7 +1,7 @@
 #pragma once
 
 #define DEFAULT_USER_TEMP 50
-#define DEFAULT_HYSTERESIS 10
+#define DEFAULT_HYSTERESIS 5
 #define MIN_HYSTERESIS 1
 #define MAX_HYSTERESIS 100
 
