@@ -126,8 +126,8 @@ static void runBurner(Sensors &sns) {
   if (suc_prep && Squib::getSquibStatus() &&
       Val::pipelineWithoutHalt(sns) > 0) {
     digitalWrite(BURNER_PIN, HIGH);
-    Squib::run(false);
   }
+  Squib::run(false);
 }
 void prepare() {
   if (Val::errorCode == 0 && !suc_prep) {

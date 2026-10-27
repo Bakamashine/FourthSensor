@@ -23,7 +23,7 @@
 
 #define ADC_SAMPLES 8  // raw reads averaged into one sample
 
-#define PERM_DIF 150
+#define PERM_DIF 100
 #define SPIKE_LIMIT 3
 
 float getTempFromTable(Sensor &);
@@ -48,8 +48,8 @@ float getTemp(Sensor &sensor) {
     sensor.ready = true;
     return returnTempWithCorInt(sensor.lastTemp, sensor);
   }
-
-  if (average - sensor.lastTemp > hyst || sensor.lastTemp - average > hyst) {
+  //TODO
+  if (average - sensor.lastTemp > hyst/2  || sensor.lastTemp - average > hyst/2) {
     sensor.lastTemp = average;
   }
 
@@ -97,11 +97,14 @@ void constrSensor(Sensor &sensor, uint8_t pin) {
   for (uint8_t i = 0; i < ADC_SAMPLES; i++) sum += analogRead(pin);
   int acp = static_cast<int>(sum / ADC_SAMPLES);
 
+  // accepting a spike
   if (sensor.lastAcp >= 0 && abs(acp - sensor.lastAcp) > PERM_DIF) {
     if (sensor.spikeCount < SPIKE_LIMIT) {
       sensor.spikeCount++;
       return;
     }
+    // TODO
+    sensor.spikeCount = 0;
   } else {
     sensor.spikeCount = 0;
   }
