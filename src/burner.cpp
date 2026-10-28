@@ -1,13 +1,5 @@
 #include "burner.hpp"
 
-#include <avr/wdt.h>
-
-#include "constants/pin.hpp"
-#include "sensor.hpp"
-#include "settings.hpp"
-#include "ui/main_ui.hpp"
-#include "validate.hpp"
-
 #define ATTEMPTS 5
 
 static constexpr int vent_delay = 1000 * 5;         // 5 sec
@@ -53,7 +45,8 @@ static void changeStatus(bool &p_st, int pin, bool *st = nullptr) {
 static void burnerDelay(int ms) {
   for (int elapsed = 0; elapsed < ms; elapsed += 250) {
     wdt_reset();
-    UI::draw();
+    // UI::draw();
+    ui_cls.draw();
     delay(250);
   }
 }
@@ -141,7 +134,8 @@ void prepare() {
 
       // success
       if (isBurnerReady && Val::errorCode == 0) {
-        UI::closeStartPage();
+        // UI::closeStartPage();
+        ui_cls.closeStartPage();
         suc_prep = true;
         runBurn(Sens::all);
         break;

@@ -1,17 +1,16 @@
 #include "ui/menu.hpp"
 
-#include "constants/settings.hpp"
 #include "ui/menu_draw.hpp"
 #include "ui/menu_items.hpp"
 
-void menuPage(U8G2 &display, Sensors &sensors) {
-  (void)sensors;
+void menuPage(UI_cls &ds, Sensors &sns) {
+  (void)sns;
 #ifdef ENABLE_SETTINGS
-  buildItems(sensors);
+  buildItems(sns);
   if (_baseMenuSelected < 0 || _baseMenuSelected >= _itemsCount)
     _baseMenuSelected = 0;
-  drawItems(display);
-  drawMarker(display);
+  drawItems(ds);
+  drawMarker(ds);
 #endif
 }
 

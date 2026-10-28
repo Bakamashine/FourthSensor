@@ -1,9 +1,11 @@
 #include "ui/menu_draw.hpp"
 
 #include <Arduino.h>
+#include <string.h>
 
 #include "constants/ui.hpp"
 #include "ui/menu_items.hpp"
+#include "ui/ui_class.hpp"
 
 static void formatValue(const MenuItem &item, char *buf) {
   if (item.target == nullptr) {
@@ -11,13 +13,17 @@ static void formatValue(const MenuItem &item, char *buf) {
     return;
   }
   if (item.kind == FLOAT) {
-    dtostrf(*static_cast<float *>(item.target), 0, 2, buf);
+    float value;
+    memcpy(&value, item.target, sizeof(value));
+    dtostrf(value, 0, 2, buf);
   } else {
-    itoa(*static_cast<int *>(item.target), buf, 10);
+    int value;
+    memcpy(&value, item.target, sizeof(value));
+    itoa(value, buf, 10);
   }
 }
 
-void drawItems(U8G2 &ds) {
+void drawItems(UI_cls &ds) {
   for (int i = 0; i < _itemsCount; i++) {
     const MenuItem &item = _items[i];
     char buf[10];
@@ -29,7 +35,7 @@ void drawItems(U8G2 &ds) {
   if (isValueOpen) ds.drawStr(U8G2_EDIT_X, U8G2_EDIT_Y, "ON");
 }
 
-void drawMarker(U8G2 &ds) {
+void drawMarker(UI_cls &ds) {
   if (_baseMenuSelected < 0 || _baseMenuSelected >= _itemsCount) return;
   const MenuItem &item = _items[_baseMenuSelected];
   ds.drawStr(U8G2_MENU_MARKER_X, item.row, ">");

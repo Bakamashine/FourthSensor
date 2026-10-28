@@ -10,9 +10,9 @@
 #include "page.hpp"
 #include "sensor.hpp"
 #include "settings.hpp"
-#include "ui/main_ui.hpp"
 #include "ui/menu.hpp"
 #include "ui/menu_items.hpp"
+#include "ui/ui_class.hpp"
 #ifdef ENABLE_COMMANDS
 #include "command.hpp"
 void handleCommand();
@@ -59,7 +59,8 @@ void setup() {
   wdt_disable();
   Serial.begin(9600);
   Wire.setWireTimeout(3000, true);
-  UI::u8g2.begin();
+
+  ui_cls.init();
 
   btnSetup();
 #ifdef LED_BUILD_STATUS
@@ -110,7 +111,8 @@ void loop() {
 #ifdef ENABLE_VALIDATE
   }
 #endif
-  UI::draw();
+  // UI::draw();
+  ui_cls.draw();
 
 #ifdef ENABLE_VALIDATE
   // validate

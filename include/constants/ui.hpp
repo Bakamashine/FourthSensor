@@ -1,47 +1,70 @@
 #pragma once
 
-#define FONT u8g2_font_squeezed_b7_tr
-#define START_FONT u8g2_font_squeezed_b7_tr
+#include "macro/general.hpp"
+
 #define OLED_WIDTH 128
 #define OLED_HEIGHT 64
 
-#define CENTER_X OLED_WIDTH / 2
-#define CENTER_Y OLED_HEIGHT / 2
+#define CENTER_X (OLED_WIDTH / 2)
+#define CENTER_Y (OLED_HEIGHT / 2)
 
-/// ACP table, same geometry as constants/gyverui.h
-// (U8G2_FIRST_ROW doubles as the menu single-value position)
-// 3 columns, 5 rows (header + 4 sensors)
+#define ROWS 5
+
+#if __G
+
+#define CHAR_WIDTH 6
+#define CHAR_HEIGHT 8
+#define TEXT_COLS (OLED_WIDTH / CHAR_WIDTH)
+#define TEXT_ROWS (OLED_HEIGHT / CHAR_HEIGHT)
+
+#define CHAR_COL(n) ((n) * CHAR_WIDTH)
+
+#define U8G2_FIRST_COLUMN CHAR_COL(1)
+#define U8G2_SECOND_COLUMN CHAR_COL(8)
+#define U8G2_THIRD_COLUMN CHAR_COL(14)
+
+#define U8G2_FIRST_ROW 0
+#define U8G2_SECOND_ROW 1
+#define U8G2_THIRD_ROW 2
+#define U8G2_FOURTH_ROW 3
+#define U8G2_FIFTH_ROW 4
+
+#define U8G2_MAIN_MARGIN_ROW 0
+#define U8G2_MAIN_ROW(n) (U8G2_MAIN_MARGIN_ROW + (n))
+
+#define U8G2_MENU_MARKER_X 0
+#define U8G2_MENU_MARKER2_X (U8G2_THIRD_COLUMN - CHAR_WIDTH)
+
+#define U8G2_EDIT_X ((TEXT_COLS - 3) * CHAR_WIDTH)
+#define U8G2_EDIT_Y U8G2_FIRST_ROW
+
+#else
+
+#define FONT u8g2_font_squeezed_b7_tr
 
 #define U8G2_MARGIN_X 5
 #define U8G2_MARGIN_Y 10
 #define U8G2_COLUMN_STEP 39
 #define U8G2_ROW_STEP 12
 
-#define U8G2_FIRST_COLUMN (U8G2_MARGIN_X + 0 * U8G2_COLUMN_STEP)   // 5
-#define U8G2_SECOND_COLUMN (U8G2_MARGIN_X + 1 * U8G2_COLUMN_STEP)  // 44
-#define U8G2_THIRD_COLUMN (U8G2_MARGIN_X + 2 * U8G2_COLUMN_STEP)   // 83
+#define U8G2_FIRST_COLUMN (U8G2_MARGIN_X + 0 * U8G2_COLUMN_STEP)
+#define U8G2_SECOND_COLUMN (U8G2_MARGIN_X + 1 * U8G2_COLUMN_STEP)
+#define U8G2_THIRD_COLUMN (U8G2_MARGIN_X + 2 * U8G2_COLUMN_STEP)
 
-#define U8G2_FIRST_ROW (U8G2_MARGIN_Y + 0 * U8G2_ROW_STEP)   // 5
-#define U8G2_SECOND_ROW (U8G2_MARGIN_Y + 1 * U8G2_ROW_STEP)  // 17
-#define U8G2_THIRD_ROW (U8G2_MARGIN_Y + 2 * U8G2_ROW_STEP)   // 29
-#define U8G2_FOURTH_ROW (U8G2_MARGIN_Y + 3 * U8G2_ROW_STEP)  // 41
-#define U8G2_FIFTH_ROW (U8G2_MARGIN_Y + 4 * U8G2_ROW_STEP)   // 53
+#define U8G2_FIRST_ROW (U8G2_MARGIN_Y + 0 * U8G2_ROW_STEP)
+#define U8G2_SECOND_ROW (U8G2_MARGIN_Y + 1 * U8G2_ROW_STEP)
+#define U8G2_THIRD_ROW (U8G2_MARGIN_Y + 2 * U8G2_ROW_STEP)
+#define U8G2_FOURTH_ROW (U8G2_MARGIN_Y + 3 * U8G2_ROW_STEP)
+#define U8G2_FIFTH_ROW (U8G2_MARGIN_Y + 4 * U8G2_ROW_STEP)
 
-#define ROWS 5
-
-/// main page geometry: with the smaller FONT the header, the four NTC sensors
-/// and the optional DS18 row all fit into the 64 px height
 #define U8G2_MAIN_MARGIN_Y 7
 #define U8G2_MAIN_ROW_STEP 10
 #define U8G2_MAIN_ROW(n) (U8G2_MAIN_MARGIN_Y + (n) * U8G2_MAIN_ROW_STEP)
 
-/// menu selection marker column, left of the first table column
 #define U8G2_MENU_MARKER_X 0
+#define U8G2_MENU_MARKER2_X (U8G2_THIRD_COLUMN - 8)
 
-/// selection marker for the right half of the menu, just before the third
-/// column so it does not collide with the values of the first half
-#define U8G2_MENU_MARKER2_X (U8G2_THIRD_COLUMN - 8)  // 75
-
-/// edit mode indicator, top right corner (next to the page title)
 #define U8G2_EDIT_X (OLED_WIDTH - 20)
 #define U8G2_EDIT_Y U8G2_FIRST_ROW
+
+#endif

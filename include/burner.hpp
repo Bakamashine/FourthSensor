@@ -1,5 +1,12 @@
 #pragma once
+#include <avr/wdt.h>
+
+#include "constants/pin.hpp"
 #include "sensor.hpp"
+#include "settings.hpp"
+#include "ui/ui_class.hpp"
+#include "validate.hpp"
+
 #define YES_OR_NO(value) value ? "yes" : "no"
 
 /**

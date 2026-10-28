@@ -1,5 +1,6 @@
 #pragma once
-#include <U8g2lib.h>
 
-void drawItems(U8G2 &ds);
-void drawMarker(U8G2 &ds);
+class UI_cls;
+
+void drawItems(UI_cls &ds);
+void drawMarker(UI_cls &ds);

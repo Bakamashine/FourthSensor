@@ -3,7 +3,6 @@
 #ifdef ENABLE_COMMANDS
 
 #include <Arduino.h>
-#include <EEPROM.h>
 #include <string.h>
 
 #include "constants/addr_eeprom.hpp"

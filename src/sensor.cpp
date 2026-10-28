@@ -1,7 +1,9 @@
 #include "sensor.hpp"
 
 #include <Arduino.h>
+#ifdef SENSOR_SETT
 #include <EEPROM.h>
+#endif
 #ifdef DS18_SENSOR
 #include <GyverDS18Single.h>
 #endif
